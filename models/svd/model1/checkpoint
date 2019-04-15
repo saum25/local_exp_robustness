@@ -1,0 +1,2 @@
+model_checkpoint_path: "Jamendo_augment_mel"
+all_model_checkpoint_paths: "Jamendo_augment_mel"
