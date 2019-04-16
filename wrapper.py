@@ -108,6 +108,7 @@ def main():
     
     file_idx = 0
     excerpt_idx = 500
+    iterate = 3
         
     with tf.Session() as sess:
         # load model weights
@@ -133,17 +134,19 @@ def main():
         # use SLIME to explain the prediction
         fill_value = [0, np.log(1e-7), np.min(mel_spect)]
         
-        for val in fill_value:        
-            print("fill value: %f" %val)        
-            explainer = lime_image.LimeImageExplainer(verbose=True)
-            explanation, _ = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, top_labels = 1, num_samples = 20, distance_metric = 'l2', sess = sess, inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
-            #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
-            agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
-            print("SLIME explanation (only positive): "),
-            print(exp_comp_weights)
-            print("prediction error: %f" %(pred_err))
-            print("=================================")
-            utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
+        for idx in range(iterate):
+            print("---iteration:%d----" %(idx+1))
+            for val in fill_value:        
+                print("fill value: %f" %val)        
+                explainer = lime_image.LimeImageExplainer(verbose=True)
+                explanation, _ = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, top_labels = 1, num_samples = 10, distance_metric = 'l2', sess = sess, inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
+                #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
+                agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
+                print("SLIME explanation (only positive): "),
+                print(exp_comp_weights)
+                print("prediction error: %f" %(pred_err))
+                print("=================================")
+                utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
 
 if __name__== "__main__":
     main()
