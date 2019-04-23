@@ -164,6 +164,7 @@ def main():
             n_unique_comp = np.unique(agg_expns_per_instance).shape[0]
             print("number of unique components: %d" %(n_unique_comp))
             unique_comps_per_instance.append(n_unique_comp)
+            agg_expns_per_instance = []
             
         utils.plot_unique_components(unique_comps_per_instance, results_path)
 
