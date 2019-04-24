@@ -69,12 +69,15 @@ def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None):
         
     plt.close()
     
-def plot_unique_components(unique_comp_per_instance, res_dir):
+def plot_unique_components(unique_comp_per_instance, samples, res_dir):
+    
     plt.figure(figsize=(6,4))
-    plt.plot(unique_comp_per_instance)
+    for ele, samp in zip(unique_comp_per_instance, samples):
+        plt.plot(ele, marker = 'o', label = str(samp))
     plt.xlabel('instance id')
     plt.ylabel('n_unique components')
     plt.title('analysing unique components')
     plt.grid()
+    plt.legend()
     plt.savefig(res_dir+'n_unique_comp.pdf', dpi=300)
     plt.close()

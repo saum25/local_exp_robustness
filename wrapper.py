@@ -106,12 +106,18 @@ def main():
     # returns a "list" of 3d arrays where each element has shape (no. of excerpts) x excerpt_size x nmels
     mel_spects = prepare_audio_svd(params_dict)
     
+    # sampling 10 instances randomly
+    sampling_seed = 0
+    np.random.seed(sampling_seed)
+    excerpt_idx = np.random.randint(low=200, high=6000, size=5)
+
     file_idx = 0
-    excerpt_idx = np.random.randint(low=200, high= 5000, size=10) # low > 100 due to silence frames. assumed that mel excerpt would have 5000 frames removing the silence ones
-    iterate = 5
-    agg_expns_per_instance = []
+    iterate = 3
+    N_samples = [10, 20]
+    
+    agg_comps_per_instance = []
     unique_comps_per_instance = []
-    save_plots = False
+    unique_comps = []
         
     with tf.Session() as sess:
         # load model weights
@@ -123,50 +129,52 @@ def main():
         print('classifier model restored from the file ' + cf_model_path)
         print("----------------------------")
         
-        for mel_instance_id in excerpt_idx:
-            # generate prediction
-            print("mel instance index: %d" % mel_instance_id)
-            print("shape selected mel excerpt:")
-            print mel_spects[file_idx].shape
-            
-            mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
-            input_data = mel_spect[np.newaxis, :, :, np.newaxis]
-            input_data = np.transpose(input_data, (0, 2, 1, 3))
-            print("Input data shape: %s" %(input_data.shape, ))
-            result = sess.run(pred, feed_dict={inp_ph:input_data})
-            print("prediction probability: %f" %result[0][0])
-            
-            # save the input
-            utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
-            
-            # use SLIME to explain the prediction
-            fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]
-            
-            for idx in range(iterate):
-                print("---iteration:%d----" %(idx+1))
-                for val in fill_value:        
-                    print("fill value: %f" %val)        
-                    explainer = lime_image.LimeImageExplainer(verbose=True)
-                    explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, top_labels = 1, num_samples = 10, distance_metric = 'l2', sess = sess, inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
-                    if save_plots:
-                        utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
-                    agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
-                    print("SLIME explanation (only positive): "),
-                    print(exp_comp_weights)
-                    print("prediction error: %f" %(pred_err))
-                    print("=================================")
-                    if save_plots:
-                        utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
-                    agg_expns_per_instance.extend([ele[0] for ele in exp_comp_weights])
-            
-            print("aggregated explanation list per instance over %d iterations" %iterate)
-            print agg_expns_per_instance
-            n_unique_comp = np.unique(agg_expns_per_instance).shape[0]
-            print("number of unique components: %d" %(n_unique_comp))
-            unique_comps_per_instance.append(n_unique_comp)
-            agg_expns_per_instance = []
-            
-        utils.plot_unique_components(unique_comps_per_instance, results_path)
+        for n_samples in N_samples:
+            print("Number of samples in the perturbed distribution: %d" %n_samples)        
+            for mel_instance_id in excerpt_idx:
+                # generate prediction
+                print("mel instance index: %d" %mel_instance_id)                
+                mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
+                input_data = mel_spect[np.newaxis, :, :, np.newaxis]
+                input_data = np.transpose(input_data, (0, 2, 1, 3))
+                print("Input data shape: %s" %(input_data.shape, ))
+                result = sess.run(pred, feed_dict={inp_ph:input_data})
+                print("prediction probability: %f" %result[0][0])
+                
+                # save the instance
+                utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
+                
+                # use SLIME to explain the prediction
+                fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]
+                
+                for idx in range(iterate):
+                    print("---iteration:%d----" %(idx+1))
+                    for val in fill_value:        
+                        print("fill value: %f" %val)        
+                        explainer = lime_image.LimeImageExplainer(verbose=True)
+                        explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, top_labels = 1, num_samples = n_samples, distance_metric = 'l2', sess = sess, inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
+                        #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
+                        agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
+                        print("SLIME explanation (only positive): "),
+                        print(exp_comp_weights)
+                        print("prediction error: %f" %(pred_err))
+                        print("=================================")
+                        #utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
+                        agg_comps_per_instance.extend([ele[0] for ele in exp_comp_weights])
+                
+                print("aggregated components per instance over %d iterations:" %iterate),
+                print agg_comps_per_instance
+                n_unique_comp = np.unique(agg_comps_per_instance).shape[0]
+                print("number of unique components: %d" %(n_unique_comp))
+                unique_comps_per_instance.append(n_unique_comp)
+                agg_comps_per_instance = []
+
+            print("unique components per instance for n_samples:%d :" %n_samples),
+            print unique_comps_per_instance
+            unique_comps.append(unique_comps_per_instance)
+            unique_comps_per_instance = []
+        print unique_comps
+        utils.plot_unique_components(unique_comps, N_samples, results_path)
 
 if __name__== "__main__":
     main()
