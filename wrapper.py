@@ -104,7 +104,7 @@ def main():
     
     # generate excerpts from input audio
     # returns a "list" of 3d arrays where each element has shape (no. of excerpts) x excerpt_size x nmels
-    mel_spects = prepare_audio_svd(params_dict)
+    mel_spects, mean, istd = prepare_audio_svd(params_dict)
     
     # sampling 10 instances randomly
     sampling_seed = 0
@@ -112,8 +112,8 @@ def main():
     excerpt_idx = np.random.randint(low=200, high=6000, size=5)
 
     file_idx = 0
-    iterate = 3
-    N_samples = [10, 20]
+    iterate = 1
+    N_samples = [10]
     
     agg_comps_per_instance = []
     unique_comps_per_instance = []
@@ -135,14 +135,15 @@ def main():
                 # generate prediction
                 print("mel instance index: %d" %mel_instance_id)                
                 mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
-                input_data = mel_spect[np.newaxis, :, :, np.newaxis]
+                mel_spect_norm = (mel_spect-mean)*istd
+                input_data = mel_spect_norm[np.newaxis, :, :, np.newaxis]
                 input_data = np.transpose(input_data, (0, 2, 1, 3))
                 print("Input data shape: %s" %(input_data.shape, ))
                 result = sess.run(pred, feed_dict={inp_ph:input_data})
                 print("prediction probability: %f" %result[0][0])
                 
                 # save the instance
-                utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
+                utils.save_mel(mel_spect_norm.T, res_dir = results_path, prob = result[0][0], norm = False)
                 
                 # use SLIME to explain the prediction
                 fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]
@@ -152,7 +153,7 @@ def main():
                     for val in fill_value:        
                         print("fill value: %f" %val)        
                         explainer = lime_image.LimeImageExplainer(verbose=True)
-                        explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, top_labels = 1, num_samples = n_samples, distance_metric = 'l2', sess = sess, inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
+                        explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, mean = mean, istd=istd, hide_color = val, top_labels = 1, num_samples = n_samples, distance_metric = 'l2', sess = sess, inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
                         #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
                         agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
                         print("SLIME explanation (only positive): "),
