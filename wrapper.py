@@ -135,15 +135,15 @@ def main():
                 # generate prediction
                 print("mel instance index: %d" %mel_instance_id)                
                 mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
-                mel_spect_norm = (mel_spect-mean)*istd
-                input_data = mel_spect_norm[np.newaxis, :, :, np.newaxis]
+                mel_spect = (mel_spect-mean)*istd
+                input_data = mel_spect[np.newaxis, :, :, np.newaxis]
                 input_data = np.transpose(input_data, (0, 2, 1, 3))
                 print("Input data shape: %s" %(input_data.shape, ))
                 result = sess.run(pred, feed_dict={inp_ph:input_data})
                 print("prediction probability: %f" %result[0][0])
                 
                 # save the instance
-                utils.save_mel(mel_spect_norm.T, res_dir = results_path, prob = result[0][0], norm = False)
+                utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
                 
                 # use SLIME to explain the prediction
                 fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]

@@ -252,7 +252,7 @@ class LimeImageExplainer(object):
                 mask[segments == z] = True
             temp[mask] = fudged_image[mask]
             # normalise the data before passing to the classifier function
-            temp = (temp - mean)*istd
+            #temp = (temp - mean)*istd
             imgs.append(temp)
             if len(imgs) == batch_size:
                 #preds = classifier_fn(np.array(imgs)) # LIME CODE
