@@ -136,10 +136,10 @@ def main():
         print("----------------------------")
         
         for n_samples in N_samples:
-            
-            print("Number of samples in the perturbed distribution: %d" %n_samples)
+            print("N_samples in the perturbed distribution: %d" %n_samples)
             
             for file_idx in range(len(mel_spects)):
+                print("----------------------------")
                 print("file number: %d" %file_idx)
 
                 sampling_seed = file_idx # result in different instance indices per file
@@ -150,7 +150,8 @@ def main():
                       
                 for mel_instance_id in excerpt_idx:
                     # generate prediction
-                    print("mel instance index: %d" %mel_instance_id)                
+                    print("")
+                    print("++++++++++mel instance index: %d++++++++" %mel_instance_id)                
                     mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
                     mel_spect = (mel_spect-mean)*istd
                     input_data = mel_spect[np.newaxis, :, :, np.newaxis]
@@ -178,10 +179,10 @@ def main():
                             print("SLIME explanation (only positive): "),
                             print(exp_comp_weights)
                             print("prediction error: %f" %(pred_err))
-                            print("=================================")
                             #utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
                             agg_comps_per_instance.extend([ele[0] for ele in exp_comp_weights])
                     
+                    print("=================================")
                     print("aggregated components per instance over %d iterations:" %args.iterate),
                     print agg_comps_per_instance
                     n_unique_comp = np.unique(agg_comps_per_instance).shape[0]
