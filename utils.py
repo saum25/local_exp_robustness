@@ -10,6 +10,8 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import librosa.display as disp
+import seaborn as sns
+import pandas as pd
 
 def getNumParams(tensors):
     return np.sum([np.prod(t.get_shape().as_list()) for t in tensors])
@@ -69,9 +71,9 @@ def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None):
         
     plt.close()
     
-def plot_unique_components(unique_comp_per_instance, samples, res_dir):
+def plot_unique_components(unique_comps, n_samples, res_dir):
     
-    plt.figure(figsize=(6,4))
+    '''plt.figure(figsize=(6,4))
     for ele, samp in zip(unique_comp_per_instance, samples):
         plt.plot(ele, marker = 'o', label = str(samp))
     plt.xlabel('instance id')
@@ -80,4 +82,42 @@ def plot_unique_components(unique_comp_per_instance, samples, res_dir):
     plt.grid()
     plt.legend()
     plt.savefig(res_dir+'n_unique_comp.pdf', dpi=300)
-    plt.close()
+    plt.close()'''
+    
+    num_u_comps = 0
+    i = 0
+    
+    # calculate number of unique components by aggregating length of all the lists
+    for u_comps in unique_comps:
+        num_u_comps += len(u_comps)
+    print("number of elements: %d" %num_u_comps)
+    
+    # create a 2-d matrix, column 0 -> num_samples 2000 for e.g., column 1 -> num unique elements
+    data_array = np.zeros((num_u_comps, 2))
+    print("data_array shape:"),
+    print data_array.shape
+    
+    for s, u in zip(n_samples, unique_comps):
+        data_array[i:i+len(u), 0]=s 
+        data_array[i:i+len(u), 1]=u
+        i += len(u)
+    
+    # create a pandas data frame as seaborn expects one
+    df_acts = pd.DataFrame(data_array, columns=['n_samples', 'n_unique_comps'])
+    df_acts.n_samples = df_acts['n_samples'].astype('int') # change the dtype
+    df_acts.to_csv(res_dir + 'n_samp_analysis.csv', index=False)
+        
+    # plotting the distribution of neurons
+    sns.set(color_codes=True)
+    plt.subplot(211)
+    sns.boxplot(x='n_samples', y='n_unique_comps', data=df_acts)
+    plt.subplot(212)
+    sns.violinplot(x='n_samples', y='n_unique_comps', data=df_acts)
+    
+    plt.savefig(res_dir + 'n_samp_analysis.pdf', dpi=300)
+    
+    
+    
+    
+    
+    

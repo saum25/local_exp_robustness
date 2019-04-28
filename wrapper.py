@@ -117,7 +117,7 @@ def main():
     # returns a "list" of 3d arrays where each element has shape (no. of excerpts) x excerpt_size x nmels
     mel_spects, mean, istd = prepare_audio_svd(params_dict)
     
-    N_samples = [10, 20]
+    N_samples = [10, 20, 30, 40]
     inst_ignore = 200
     
     agg_comps_per_instance = []
@@ -161,7 +161,7 @@ def main():
                     print("prediction probability: %f" %result[0][0])
                     
                     # save the instance
-                    utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
+                    #utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
                     
                     # use SLIME to explain the prediction
                     fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]
