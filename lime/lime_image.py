@@ -130,7 +130,7 @@ class LimeImageExplainer(object):
         self.feature_selection = feature_selection
         self.base = lime_base.LimeBase(kernel, verbose)
 
-    def explain_instance(self, image, classifier_fn, mean, istd, labels=(1,),
+    def explain_instance(self, image, classifier_fn, labels=(1,),
                          hide_color=None,
                          top_labels=5, num_features=100000, num_samples=1000,
                          batch_size=10,
@@ -179,7 +179,6 @@ class LimeImageExplainer(object):
 
         data, labels = self.data_labels(image, fudged_image, segments,
                                         classifier_fn, num_samples,
-                                        mean, istd,
                                         batch_size=batch_size, sess=sess, inp_data_sym=inp_data_sym, score_sym=score_sym)
 
         #SAUM
@@ -215,8 +214,6 @@ class LimeImageExplainer(object):
                     segments,
                     classifier_fn,
                     num_samples,
-                    mean,
-                    istd,
                     batch_size=10,
                     sess = None,
                     inp_data_sym=None,
@@ -251,8 +248,6 @@ class LimeImageExplainer(object):
             for z in zeros:
                 mask[segments == z] = True
             temp[mask] = fudged_image[mask]
-            # normalise the data before passing to the classifier function
-            #temp = (temp - mean)*istd
             imgs.append(temp)
             if len(imgs) == batch_size:
                 #preds = classifier_fn(np.array(imgs)) # LIME CODE

@@ -16,6 +16,7 @@ import models.svd.Classifier as classifier
 import utils
 from pp_audio import prepare_audio_svd
 from lime import lime_image
+import time
 
 
 cf_model_path = 'models/svd/model1/Jamendo_augment_mel'
@@ -115,9 +116,10 @@ def main():
     
     # generate excerpts from input audio
     # returns a "list" of 3d arrays where each element has shape (no. of excerpts) x excerpt_size x nmels
-    mel_spects, mean, istd = prepare_audio_svd(params_dict)
+    mel_spects = prepare_audio_svd(params_dict)
     
-    N_samples = [10, 20, 30, 40]
+    #N_samples = [5000, 10000, 15000, 20000, 25000, 30000]
+    N_samples = [500, 1000]
     inst_ignore = 200
     
     agg_comps_per_instance = []
@@ -153,7 +155,6 @@ def main():
                     print("")
                     print("++++++++++mel instance index: %d++++++++" %mel_instance_id)                
                     mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
-                    mel_spect = (mel_spect-mean)*istd
                     input_data = mel_spect[np.newaxis, :, :, np.newaxis]
                     input_data = np.transpose(input_data, (0, 2, 1, 3))
                     print("Input data shape: %s" %(input_data.shape, ))
@@ -167,11 +168,12 @@ def main():
                     fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]
                     
                     for idx in range(args.iterate):
+                        start = time.time()
                         print("---iteration:%d----" %(idx+1))
                         for val in fill_value:        
                             print("fill value: %f" %val)        
                             explainer = lime_image.LimeImageExplainer(verbose=True)
-                            explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, mean = mean, istd=istd, hide_color = val, 
+                            explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, 
                                                                                top_labels = 1, num_samples = n_samples, distance_metric = args.dist_metric, sess = sess, 
                                                                                inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
                             #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
@@ -181,6 +183,7 @@ def main():
                             print("prediction error: %f" %(pred_err))
                             #utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
                             agg_comps_per_instance.extend([ele[0] for ele in exp_comp_weights])
+                            print("time taken: %f" %(time.time()-start))
                     
                     print("=================================")
                     print("aggregated components per instance over %d iterations:" %args.iterate),

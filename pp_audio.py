@@ -70,7 +70,7 @@ def prepare_audio_svd(parameters):
     spects = (np.log(np.maximum(np.dot(spect[:, :bin_mel_max], filterbank), 1e-7)) for spect in spects)
         
     # - define generator for Z-scoring
-    #spects = ((spect - mean) * istd for spect in spects)
+    spects = ((spect - mean) * istd for spect in spects)
 
     # - define generator for silence-padding
     pad = np.tile((np.log(1e-7) - mean) * istd, (blocklen // 2, 1))
@@ -91,5 +91,5 @@ def prepare_audio_svd(parameters):
         print("mel excerpt shape: %s" %(excerpts.shape, ))
         spectrum.append(excerpts)
             
-    return spectrum, mean, istd
+    return spectrum
 
