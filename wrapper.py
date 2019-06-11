@@ -113,14 +113,14 @@ def main():
     # generate prediction
     pred = generate_prediction(inp_ph, params_dict)
     print("prediction vector shape: %s from layer <%s>" %(pred.shape, params_dict['layer'])) # (n_batches, n_out_neurons)
+    print "-------------"
     
     # generate excerpts from input audio
     # returns a "list" of 3d arrays where each element has shape (no. of excerpts) x excerpt_size x nmels
     mel_spects = prepare_audio_svd(params_dict)
     
-    #N_samples = [5000, 10000, 15000, 20000, 25000, 30000]
-    N_samples = [500, 1000]
-    inst_ignore = 200
+    N_samples = [5000, 10000, 15000, 20000, 25000, 30000]
+    inst_ignore = 200 # approximately ignore the ones with padding
     
     agg_comps_per_instance = []
     unique_comps_per_instance = []
@@ -175,7 +175,7 @@ def main():
                             explainer = lime_image.LimeImageExplainer(verbose=True)
                             explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, 
                                                                                top_labels = 1, num_samples = n_samples, distance_metric = args.dist_metric, sess = sess, 
-                                                                               inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10)
+                                                                               inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10, batch_size=16)
                             #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
                             agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
                             print("SLIME explanation (only positive): "),

@@ -258,7 +258,11 @@ class LimeImageExplainer(object):
                 labels.extend(preds)
                 imgs = []
         if len(imgs) > 0:
-            preds = classifier_fn(np.array(imgs))
+            #preds = classifier_fn(np.array(imgs))
+            imgs_arr = np.array(imgs)
+            imgs_arr = imgs_arr[:, :, :, np.newaxis]
+            imgs_arr = np.transpose(imgs_arr, (0, 2, 1, 3))
+            preds = classifier_fn(sess, inp_data_sym, score_sym, imgs_arr)
             labels.extend(preds)
         return data, np.array(labels)
     
