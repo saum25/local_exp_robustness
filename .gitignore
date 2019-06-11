@@ -1,6 +1,4 @@
 *.DS_Store
-models/.DS_Store
-models/svd/.DS_Store
 .project
 .pydevproject
 *.pyc
