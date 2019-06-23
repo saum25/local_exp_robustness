@@ -202,7 +202,7 @@ class LimeImageExplainer(object):
             ret_exp.top_labels = list(top)
             ret_exp.top_labels.reverse()
         for label in top:
-            print "label: %d" %label
+            #print "label: %d" %label
             (ret_exp.intercept[label],
              ret_exp.local_exp[label],
              ret_exp.score,         # SAUM added distance

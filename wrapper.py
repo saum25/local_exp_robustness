@@ -17,6 +17,7 @@ import utils
 from pp_audio import prepare_audio_svd
 from lime import lime_image
 import time
+import pickle
 
 
 cf_model_path = 'models/svd/model1/Jamendo_augment_mel'
@@ -57,6 +58,7 @@ def main():
     parser.add_argument('--iterate', type=int, default=5, help='number of SLIME iterations per instance')
     parser.add_argument('--dist_metric', type=str, default='l2', help='distance metric')
     parser.add_argument('--dataset_path', type=str, default='../deep_inversion/', help='dataset path')
+    parser.add_argument('--n_samp_exp', default = False, action="store_true", help='if given, runs the code in exp1 mode, i.e., finding Ns')
     
     args = parser.parse_args()
        
@@ -79,6 +81,7 @@ def main():
                'n_inst_pf': args.n_inst_pf,
                'iterate' : args.iterate,
                'dist_metric': args.dist_metric,
+               'n_samp_mode': args.n_samp_exp,
                 # results params
                'results_path':results_path,
                }
@@ -100,7 +103,8 @@ def main():
     print "-------------"
     print " n_instances_pf: %d" % params_dict['n_inst_pf']
     print " iterations: %d" % params_dict['iterate']
-    print " distance_metric: %s" % params_dict['dist_metric']    
+    print " distance_metric: %s" % params_dict['dist_metric']
+    print " n_samp_mode: %r" % params_dict['n_samp_mode']     
     print "-------------"
     print " results dir: %s" % params_dict['results_path']
     print "-------------"
@@ -117,15 +121,32 @@ def main():
     
     # generate excerpts from input audio
     # returns a "list" of 3d arrays where each element has shape (no. of excerpts) x excerpt_size x nmels
-    mel_spects = prepare_audio_svd(params_dict)
+    mel_spects, mew, i_std = prepare_audio_svd(params_dict)
+
+    # finding the minimum bin value over the dataset
+    min_val = min([np.min(arr) for arr in mel_spects])
+    print("minimum bin value over the dataset: %f " %min_val)
     
-    N_samples = [5000, 10000, 15000, 20000, 25000, 30000]
+    # normalised noise distribution
+    noise_arr = np.random.normal(0, 1, (params_dict['excerpt_size'], params_dict['nmels']))
+    noise_arr_norm = (noise_arr-mew)*i_std
+    
+    
+    if params_dict['n_samp_mode']:
+        N_samples = [30, 50]#[1000, 5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000]
+    else:
+        N_samples = [30]#[70000]
+               
     inst_ignore = 200 # approximately ignore the ones with padding
     
     agg_comps_per_instance = []
-    unique_comps_per_instance = []
-    unique_comps_per_file = []
-    unique_comps = []
+    if params_dict['n_samp_mode']:
+        unique_comps_per_instance = []
+        unique_comps = []
+        time_list = []
+        time_per_ns = []
+    else:
+        ins_intersection=[]
         
     with tf.Session() as sess:
         # load model weights
@@ -142,7 +163,7 @@ def main():
             
             for file_idx in range(len(mel_spects)):
                 print("----------------------------")
-                print("file number: %d" %file_idx)
+                print("file number: %d" %(file_idx+1))
 
                 sampling_seed = file_idx # result in different instance indices per file
                 np.random.seed(sampling_seed)
@@ -157,7 +178,7 @@ def main():
                     mel_spect = mel_spects[file_idx][mel_instance_id] # mel_spect shape: 115 x 80
                     input_data = mel_spect[np.newaxis, :, :, np.newaxis]
                     input_data = np.transpose(input_data, (0, 2, 1, 3))
-                    print("Input data shape: %s" %(input_data.shape, ))
+                    #print("Input data shape: %s" %(input_data.shape, ))
                     result = sess.run(pred, feed_dict={inp_ph:input_data})
                     print("prediction probability: %f" %result[0][0])
                     
@@ -165,43 +186,74 @@ def main():
                     #utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
                     
                     # use SLIME to explain the prediction
-                    fill_value = [0]#, np.log(1e-7), np.min(mel_spect)]
+                    if params_dict['n_samp_mode']:
+                        fill_value = [0]
+                    else:
+                        fill_value = [0, min_val, np.min(mel_spect), np.mean(mel_spect), 'noise']
                     
                     for idx in range(args.iterate):
-                        start = time.time()
                         print("---iteration:%d----" %(idx+1))
-                        for val in fill_value:        
-                            print("fill value: %f" %val)        
+                        for val in fill_value:
+                            if params_dict['n_samp_mode']:
+                                start = time.time()
+                            print("\n fill value: %s" %val)        
                             explainer = lime_image.LimeImageExplainer(verbose=True)
                             explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, 
                                                                                top_labels = 1, num_samples = n_samples, distance_metric = args.dist_metric, sess = sess, 
-                                                                               inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10, batch_size=16)
+                                                                               inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10, batch_size=16, noise_data = noise_arr_norm)
                             #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
-                            agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
-                            print("SLIME explanation (only positive): "),
+                            agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=False, hide_rest=True, num_features=3)
+                            
+                            if params_dict['n_samp_mode']:
+                                exp_t = time.time()-start
+                                time_list.append(exp_t)
+                                print("time taken: %f" %(exp_t))
+                            
+                            print("SLIME explanations: "),
                             print(exp_comp_weights)
-                            print("prediction error: %f" %(pred_err))
+                            #print("prediction error: %f" %(pred_err))
                             #utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
-                            agg_comps_per_instance.extend([ele[0] for ele in exp_comp_weights])
-                            print("time taken: %f" %(time.time()-start))
+                            if params_dict['n_samp_mode']:
+                                agg_comps_per_instance.extend([ele[0] for ele in exp_comp_weights])
+                            else:
+                                agg_comps_per_instance.append([ele[0] for ele in exp_comp_weights])
                     
                     print("=================================")
                     print("aggregated components per instance over %d iterations:" %args.iterate),
                     print agg_comps_per_instance
-                    n_unique_comp = np.unique(agg_comps_per_instance).shape[0]
-                    print("number of unique components: %d" %(n_unique_comp))
-                    unique_comps_per_instance.append(n_unique_comp)
+                    if params_dict['n_samp_mode']:
+                        n_unique_comp = np.unique(agg_comps_per_instance).shape[0]
+                        print("number of unique components: %d" %(n_unique_comp))
+                        unique_comps_per_instance.append(n_unique_comp)
+                    else:
+                        #ins_intersection.append(utils.analyse_fv_diff(agg_comps_per_instance)) # save cardinalty of the intersection set
+                        ins_intersection.append(agg_comps_per_instance) # save all explanations per instance., so ins_intersection is a list of list of lists
                     agg_comps_per_instance = []
-    
-                print("unique components per instance for n_samples:%d :" %n_samples),
+                    
+            if params_dict['n_samp_mode']:
+                print("unique components over all instances for n_samples: %d:" %n_samples), 
                 print unique_comps_per_instance
-                unique_comps_per_file.extend(unique_comps_per_instance)
+                unique_comps.append(unique_comps_per_instance)
                 unique_comps_per_instance = []
-            print("unique components over all instances for n_samples: %d:" %n_samples), 
-            print unique_comps_per_file
-            unique_comps.append(unique_comps_per_file)
-            unique_comps_per_file = []
-        utils.plot_unique_components(unique_comps, N_samples, results_path)
+                time_per_ns.append(np.mean(np.asarray(time_list)))
+                time_list = []
+                
+        #save the nested list as a pickle object
+        if params_dict['n_samp_mode']:
+            list_to_save = unique_comps
+            list_to_save.append(time_per_ns) # last list is of time
+        else:
+            list_to_save = ins_intersection
+            
+        print("data saved to the pickle object:"),
+        print list_to_save
+        
+        with open("results/exps", "wb") as fp:
+            pickle.dump(list_to_save, fp)
 
+        #plot results
+        #utils.plot_unique_components(unique_comps, N_samples, results_path)
+        #utils.plot_fv_senstivity(ins_intersection, results_path)
+        
 if __name__== "__main__":
     main()
