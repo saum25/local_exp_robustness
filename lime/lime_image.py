@@ -68,18 +68,20 @@ class ImageExplanation(object):
                 mask[segments == f[0]] = 1
             return temp, mask, fs, distance        # SAUM : added fs here
         else:
+            fs=[] # SAUM modified some code to make this code work, check with original LIME code to see the diff
             for f, w in exp[:num_features]:
                 if np.abs(w) < min_weight:
                     continue
-                c = 0 if w < 0 else 1
+                #c = 0 if w < 0 else 1
                 mask[segments == f] = 1 if w < 0 else 2
                 temp[segments == f] = image[segments == f].copy()
-                temp[segments == f, c] = np.max(image)
-                for cp in [0, 1, 2]:
+                #temp[segments == f, c] = np.max(image)
+                '''for cp in [0, 1, 2]:
                     if c == cp:
-                        continue
+                        continue'''
                     # temp[segments == f, cp] *= 0.5
-            return temp, mask
+                fs.append((f, w))
+            return temp, mask, fs, distance
 
 
 class LimeImageExplainer(object):
@@ -136,7 +138,7 @@ class LimeImageExplainer(object):
                          batch_size=10,
                          distance_metric='cosine', model_regressor=None,
                          sess=None, inp_data_sym=None, score_sym=None,
-                         exp_type='temporal', n_segments=10):
+                         exp_type='temporal', n_segments=10, noise_data = None):
         """Generates explanations for a prediction.
 
         First, we generate neighborhood data by randomly perturbing features
@@ -174,6 +176,8 @@ class LimeImageExplainer(object):
                     np.mean(image[segments == x][:, 0]),
                     np.mean(image[segments == x][:, 1]),
                     np.mean(image[segments == x][:, 2]))
+        elif hide_color is 'noise':
+            fudged_image = noise_data 
         else:
             fudged_image[:] = hide_color
 
