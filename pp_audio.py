@@ -91,5 +91,5 @@ def prepare_audio_svd(parameters):
         print("mel excerpt shape: %s" %(excerpts.shape, ))
         spectrum.append(excerpts)
             
-    return spectrum
+    return spectrum, mean, istd
 
