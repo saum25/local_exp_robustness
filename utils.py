@@ -115,9 +115,56 @@ def plot_unique_components(unique_comps, n_samples, res_dir):
     sns.violinplot(x='n_samples', y='n_unique_comps', data=df_acts)
     
     plt.savefig(res_dir + 'n_samp_analysis.pdf', dpi=300)
+
+def analyse_fv_diff(data_to_analyse):
+    print("data: %d" %len(data_to_analyse))
+    fv_base = data_to_analyse[0] # fill value 0
+    res = []
     
+    for fv_new in data_to_analyse[1:]:
+            res.append(len(set(fv_base) & set(fv_new))) # returns the number of comman elements
+    return res
+
+def plot_fv_senstivity(fv_exps_its, res_dir):
     
+    # number of instances (excerpt)
+    n_instances = len(fv_exps_its)
     
+    # create a 2-d matrix, column 0 -> comparison id, e.g., 1,  column 1 -> number of common explanations per instance for that comparison id
+    data_array = np.zeros((n_instances*len(fv_exps_its[0]), 2))
+    print("data_array shape:"),
+    print data_array.shape
     
+    # labels
+    comp_ids = np.arange(1, len(fv_exps_its[0])+1).tolist()
+    i = 0
+    
+    exps_its=[]
+    for x in range(len(fv_exps_its[0])):
+        exps_its.append([d[x] for d in fv_exps_its])
+    print exps_its
+    
+    for c_id, exps in zip(comp_ids, exps_its):
+        data_array[i:i+len(exps), 0]=c_id 
+        data_array[i:i+len(exps), 1]=exps
+        i += len(exps)
+
+    print data_array
+    
+    # create a pandas data frame as seaborn expects one
+    df_acts = pd.DataFrame(data_array, columns=['fv_comp_ids', 'n_common_exps'])
+    df_acts.fv_comp_ids = df_acts['fv_comp_ids'].astype('int') # change the dtype
+    df_acts.n_common_exps = df_acts['n_common_exps'].astype('int') # change the dtype
+    df_acts.to_csv(res_dir + 'fv_exps_its.csv', index=False)
+        
+    # plotting the distribution of neurons
+    sns.set(color_codes=True)
+    plt.subplot(211)
+    sns.boxplot(x='fv_comp_ids', y='n_common_exps', data=df_acts)
+    plt.subplot(212)
+    sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts)
+    plt.grid()
+    
+    plt.savefig(res_dir + 'fv_exps_its.pdf', dpi=300)
     
     
