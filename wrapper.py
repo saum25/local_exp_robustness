@@ -55,6 +55,8 @@ def main():
     parser.add_argument('--off', type=float, default=0.0, help='temporal location to start a reading an audio file (sec)')
     parser.add_argument('--dur', type=float, default=3.2, help='audio segment(sec)')
     parser.add_argument('--n_inst_pf', type=int, default=5, help='number of instances(excerpts) to explain per audio file')
+    parser.add_argument('--e_type', type=str, default='temporal', help='explanation type')
+    parser.add_argument('--n_seg', type=int, default=10, help='maximum number of components in an explanation')
     parser.add_argument('--iterate', type=int, default=5, help='number of SLIME iterations per instance')
     parser.add_argument('--dist_metric', type=str, default='l2', help='distance metric')
     parser.add_argument('--dataset_path', type=str, default='../deep_inversion/', help='dataset path')
@@ -82,6 +84,8 @@ def main():
                'iterate' : args.iterate,
                'dist_metric': args.dist_metric,
                'n_samp_mode': args.n_samp_exp,
+               'e_type': args.e_type,
+               'n_seg': args.n_seg,
                 # results params
                'results_path':results_path,
                }
@@ -104,7 +108,9 @@ def main():
     print " n_instances_pf: %d" % params_dict['n_inst_pf']
     print " iterations: %d" % params_dict['iterate']
     print " distance_metric: %s" % params_dict['dist_metric']
-    print " n_samp_mode: %r" % params_dict['n_samp_mode']     
+    print " n_samp_mode: %r" % params_dict['n_samp_mode']
+    print " explanation type: %s" % params_dict['e_type']
+    print " n_segments: %d" % params_dict['n_seg']      
     print "-------------"
     print " results dir: %s" % params_dict['results_path']
     print "-------------"
@@ -200,7 +206,7 @@ def main():
                             explainer = lime_image.LimeImageExplainer(verbose=True)
                             explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, 
                                                                                top_labels = 1, num_samples = n_samples, distance_metric = args.dist_metric, sess = sess, 
-                                                                               inp_data_sym = inp_ph, score_sym = pred, exp_type= 'temporal', n_segments= 10, batch_size=16, noise_data = noise_arr_norm)
+                                                                               inp_data_sym = inp_ph, score_sym = pred, exp_type= params_dict['e_type'], n_segments= params_dict['n_seg'], batch_size=16, noise_data = noise_arr_norm)
                             #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
                             agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=False, hide_rest=True, num_features=3)
                             

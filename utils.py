@@ -67,7 +67,10 @@ def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None):
         plt.title('explanation')
         plt.tight_layout()
         plt.colorbar()
-        plt.savefig(res_dir+'/'+'exp_fill_val_'+ '%.3f' % fill_val +'.pdf', dpi=300)
+        if type(fill_val) is str:
+            plt.savefig(res_dir+'/'+'exp_fill_val_'+ fill_val +'.pdf', dpi=300)
+        else:
+            plt.savefig(res_dir+'/'+'exp_fill_val_'+ '%.3f' %fill_val +'.pdf', dpi=300)
         
     plt.close()
     
