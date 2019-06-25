@@ -60,6 +60,7 @@ def main():
     parser.add_argument('--iterate', type=int, default=5, help='number of SLIME iterations per instance')
     parser.add_argument('--dist_metric', type=str, default='l2', help='distance metric')
     parser.add_argument('--dataset_path', type=str, default='../deep_inversion/', help='dataset path')
+    parser.add_argument('--dataset_name', type=str, default='jamendo', help='dataset name')
     parser.add_argument('--n_samp_exp', default = False, action="store_true", help='if given, runs the code in exp1 mode, i.e., finding Ns')
     
     args = parser.parse_args()
@@ -79,6 +80,7 @@ def main():
                'cache_spectra': None, # from Jan's code. Directory path to store the cached spectra. Disabled by default.                             
                'mean_std_fp': meanstd_file_path,
                'dataset_path': args.dataset_path,
+               'dataset_name': args.dataset_name,
                 # SLIME params
                'n_inst_pf': args.n_inst_pf,
                'iterate' : args.iterate,
@@ -103,6 +105,7 @@ def main():
     print " save_input : %r" % params_dict['save_input']
     print " cache_spectra: %r" %params_dict['cache_spectra']
     print " mean_std dir: %s" %params_dict['mean_std_fp']
+    print " dataset name: %s" %params_dict['dataset_name']
     print " dataset dir: %s" %params_dict['dataset_path']
     print "-------------"
     print " n_instances_pf: %d" % params_dict['n_inst_pf']
@@ -256,10 +259,6 @@ def main():
         
         with open("results/exps", "wb") as fp:
             pickle.dump(list_to_save, fp)
-
-        #plot results
-        #utils.plot_unique_components(unique_comps, N_samples, results_path)
-        #utils.plot_fv_senstivity(ins_intersection, results_path)
         
 if __name__== "__main__":
     main()

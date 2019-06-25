@@ -32,13 +32,13 @@ def prepare_audio_svd(parameters):
     
     # prepare dataset
     print("Preparing data reading...")
-    datadir = os.path.join(parameters['dataset_path'], 'datasets', 'jamendo')
+    datadir = os.path.join(parameters['dataset_path'], 'datasets', parameters['dataset_name'])
 
     # - load filelist
-    with io.open(os.path.join(datadir, 'filelists', 'valid')) as f:
-        filelist = [l.rstrip() for l in f if l.rstrip()]
+    '''with io.open(os.path.join(datadir, 'filelists', 'valid')) as f:
+        filelist = [l.rstrip() for l in f if l.rstrip()]'''
     with io.open(os.path.join(datadir, 'filelists', 'test')) as f:
-        filelist += [l.rstrip() for l in f if l.rstrip()]
+        filelist = [l.rstrip() for l in f if l.rstrip()]
         
     if not parameters['partial']:
         #duration and offset arguments have no use in this part of the code.
