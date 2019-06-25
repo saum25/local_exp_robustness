@@ -137,6 +137,7 @@ def main():
     print("minimum bin value over the dataset: %f " %min_val)
     
     # normalised noise distribution
+    np.random.seed(0)
     noise_arr = np.random.normal(0, 1, (params_dict['excerpt_size'], params_dict['nmels']))
     noise_arr_norm = (noise_arr-mew)*i_std
     
