@@ -59,7 +59,8 @@ def prepare_audio_svd(parameters):
                   for fn in filelist)
         
     # -read mean and 1.0/std dev per mel band
-    mean, istd = utils.read_meanstd_file(parameters['mean_std_fp']) 
+    print("mean_std_file path: %s" %(parameters['mean_std_fp'] + '/' + parameters['dataset_name'] + '_meanstd.npz'))
+    mean, istd = utils.read_meanstd_file(parameters['mean_std_fp'] + '/' + parameters['dataset_name'] + '_meanstd.npz') 
 
     # - prepare mel filterbank
     filterbank = audio.create_mel_filterbank(sample_rate, frame_len, mel_bands,

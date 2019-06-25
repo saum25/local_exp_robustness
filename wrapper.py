@@ -21,7 +21,7 @@ import pickle
 
 
 cf_model_path = 'models/svd/model1/Jamendo_augment_mel'
-meanstd_file_path = 'models/svd/jamendo_meanstd.npz'
+meanstd_file_path = 'models/svd'
 results_path = 'results/'
 
 # Seems redundant - TODO -> Improve this
