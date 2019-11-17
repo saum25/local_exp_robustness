@@ -124,7 +124,7 @@ def analyse_fv_diff(data_to_analyse):
     fv_base = data_to_analyse[0] # fill value 0
     res = []
     
-    for fv_new in data_to_analyse[1:]:
+    for fv_new in data_to_analyse[0:]:
             res.append(len(set(fv_base) & set(fv_new))) # returns the number of comman elements
     return res
 
@@ -140,6 +140,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     
     # labels
     comp_ids = np.arange(1, len(fv_exps_its[0])+1).tolist()
+    #comp_ids = ['0', 'min(dataset)', 'min(input)', 'mean(input)', 'noise']
     i = 0
     
     exps_its=[]
@@ -156,17 +157,38 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     
     # create a pandas data frame as seaborn expects one
     df_acts = pd.DataFrame(data_array, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts.fv_comp_ids = df_acts['fv_comp_ids'].astype('int') # change the dtype
+    df_acts['fv_comp_ids'] = df_acts['fv_comp_ids'].map({1: '0', 2:'min(dataset)', 3: 'min(input)', 4:'mean(input)', 5:'Gaussian noise'})
+    print(df_acts.head())
+    #df_acts.fv_comp_ids = df_acts['fv_comp_ids'].astype('int') # change the dtype
     df_acts.n_common_exps = df_acts['n_common_exps'].astype('int') # change the dtype
     df_acts.to_csv(res_dir + 'fv_exps_its.csv', index=False)
         
     # plotting the distribution of neurons
     sns.set(color_codes=True)
-    plt.subplot(211)
-    sns.boxplot(x='fv_comp_ids', y='n_common_exps', data=df_acts)
-    plt.subplot(212)
+    #plt.subplot(211)
+    #sns.boxplot(x='fv_comp_ids', y='n_common_exps', data=df_acts)
+    #a = df_acts.as_matrix()[:, 1]
+    #sns.kdeplot(a[800:1600])
+    #sns.distplot(a[800:1600])
+
+    '''for i in range(5):
+        print np.mean(a[800*i:(i+1)*800])
+        print np.std(a[800*i:(i+1)*800])'''
+    
+    #plt.subplot(212)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts)
-    plt.grid()
+    #sns.kdeplot(a[1600:2400])
+    #sns.distplot(a[1600:2400])
+    #print np.mean(a[1600:2400])
+    
+    #sns.kdeplot(a[2400:3200])
+    #print np.mean(a[2400:3200])
+    
+    #sns.kdeplot(a[3200:4000])
+    #print np.mean(a[3200:4000])
+    #plt.grid()
+    
+    plt.title('Distribution of Temporal Explanations (RWC) for fv=0 vs fv=rest')
     
     plt.savefig(res_dir + 'fv_exps_its.pdf', dpi=300)
     
