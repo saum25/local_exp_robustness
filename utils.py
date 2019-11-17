@@ -9,6 +9,7 @@ import tensorflow as tf
 import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
+mpl.rc('font', size=6) # code to change the fontsize of x-axis ticks when plotting x-axis in the matplotlib scientific format. (Fig. 4.8 in the thesis.)
 import librosa.display as disp
 import seaborn as sns
 import pandas as pd
@@ -76,49 +77,97 @@ def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None):
     
 def plot_unique_components(unique_comps, n_samples, res_dir):
     
-    '''plt.figure(figsize=(6,4))
-    for ele, samp in zip(unique_comp_per_instance, samples):
-        plt.plot(ele, marker = 'o', label = str(samp))
-    plt.xlabel('instance id')
-    plt.ylabel('n_unique components')
-    plt.title('analysing unique components')
-    plt.grid()
-    plt.legend()
-    plt.savefig(res_dir+'n_unique_comp.pdf', dpi=300)
-    plt.close()'''
-    
-    num_u_comps = 0
+    '''
+    Code to plot figure 4.7 in the thesis.
+    It plots the distribution of the number of unigue elements in a SLIME explanation
+    after multiple iterations of applying SLIME to the same instance
+    The code plots results for instances from the Jamendo and RWC dataset
+    with SVD-TF single neuron model as the predictor. This is referred to as exp_1 in the ppt.
+    '''
+       
+    num_u_comps_1 = 0 # Jamendo
+    num_u_comps_2 = 0 # RWC
     i = 0
+    fs1 = 6
+    fs2 = 10
+    
+    # calculate the number of unique components by aggregating length of all the lists
+    for u_comps in unique_comps[0][0:9]: # 0 -> Jamendo results, idx = 0 to idx = 8 are the unique elements, idx=9 are the time durations
+        num_u_comps_1 += len(u_comps)
+    print("number of elements (Jamendo): %d" %num_u_comps_1)
     
     # calculate number of unique components by aggregating length of all the lists
-    for u_comps in unique_comps:
-        num_u_comps += len(u_comps)
-    print("number of elements: %d" %num_u_comps)
+    for u_comps in unique_comps[1][0:9]: # 1 -> RWC
+        num_u_comps_2 += len(u_comps)
+    print("number of elements (RWC): %d" %num_u_comps_2)
+
     
     # create a 2-d matrix, column 0 -> num_samples 2000 for e.g., column 1 -> num unique elements
-    data_array = np.zeros((num_u_comps, 2))
-    print("data_array shape:"),
-    print data_array.shape
+    data_array_1 = np.zeros((num_u_comps_1, 2))
+    print("data_array_1 shape:"),
+    print data_array_1.shape
+    data_array_2 = np.zeros((num_u_comps_2, 2))
+    print("data_array_2 shape:"),
+    print data_array_2.shape
     
-    for s, u in zip(n_samples, unique_comps):
-        data_array[i:i+len(u), 0]=s 
-        data_array[i:i+len(u), 1]=u
+    # filling the data from the Jamendo exps
+    for s, u in zip(n_samples, unique_comps[0][0:9]):
+        data_array_1[i:i+len(u), 0]=s 
+        data_array_1[i:i+len(u), 1]=u
         i += len(u)
+
+    i = 0
+    for s, u in zip(n_samples, unique_comps[1][0:9]): # RWC data
+        data_array_2[i:i+len(u), 0]=s 
+        data_array_2[i:i+len(u), 1]=u
+        i += len(u)    
     
     # create a pandas data frame as seaborn expects one
-    df_acts = pd.DataFrame(data_array, columns=['n_samples', 'n_unique_comps'])
-    df_acts.n_samples = df_acts['n_samples'].astype('int') # change the dtype
-    df_acts.to_csv(res_dir + 'n_samp_analysis.csv', index=False)
-        
-    # plotting the distribution of neurons
+    # for exp 1_1 - temporal Jamendo
+    df_acts_1 = pd.DataFrame(data_array_1, columns=['n_samples', 'n_unique_comps'])
+    df_acts_1.n_samples = df_acts_1['n_samples'].astype('int') # change the dtype
+    df_acts_1.n_unique_comps = df_acts_1['n_unique_comps'].astype('int') # change the dtype
+    df_acts_1.to_csv(res_dir + '/exp1_'+str(1) + '/' + 'exp1_'+ str(1) + '_n_samp_analysis.csv', index=False)
+
+    df_acts_2 = pd.DataFrame(data_array_2, columns=['n_samples', 'n_unique_comps'])
+    df_acts_2.n_samples = df_acts_2['n_samples'].astype('int') # change the dtype
+    df_acts_2.n_unique_comps = df_acts_2['n_unique_comps'].astype('int') # change the dtype
+    df_acts_2.to_csv(res_dir + '/exp1_'+str(2) + '/' + 'exp1_'+ str(2) + '_n_samp_analysis.csv', index=False)
+
+    # plotting the time taken for top-3 explanations for Jamendo - temporal    
+    plt.figure(figsize = (4, 1))
+    plt.plot(n_samples, unique_comps[0][9], marker='o', markersize= 3, linestyle='--', linewidth= 1)
+    plt.xticks(fontsize=fs1)
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(0,0)) # to plot x-axis on the scientific scale
+    plt.yticks(fontsize=fs1)
+    plt.xlabel("Number of samples " r'($N_s$)', fontsize=fs1)
+    plt.ylabel(r'$T_s$' ' (seconds)', fontsize=fs1)
+    plt.savefig(res_dir + 'exp1_time.pdf', dpi=300, bbox_inches='tight')
+
+    # plotting the distribution of unique components for different Ns values
+    # exp1_1 - temporal Jamendo
+
+    plt.figure(figsize=(8, 5))
+
     sns.set(color_codes=True)
     plt.subplot(211)
-    sns.boxplot(x='n_samples', y='n_unique_comps', data=df_acts)
-    plt.subplot(212)
-    sns.violinplot(x='n_samples', y='n_unique_comps', data=df_acts)
+    sns.violinplot(x='n_samples', y='n_unique_comps', data=df_acts_1)
+    plt.ylabel(r'$U_n$', fontsize=fs2)
+    plt.xticks([]) # turns off x-axis ticks
+    plt.xlabel('')
+    plt.yticks(fontsize=fs2)
+    plt.title('(a)')
     
-    plt.savefig(res_dir + 'n_samp_analysis.pdf', dpi=300)
-
+    # exp1_2 - temporal RWC
+    plt.subplot(212)
+    sns.violinplot(x='n_samples', y='n_unique_comps', data=df_acts_2)
+    plt.ylabel(r'$U_n$', fontsize=fs2)
+    plt.xlabel('Number of samples ' r'($N_s$)', fontsize=fs2)
+    plt.xticks(fontsize=fs2)
+    plt.yticks(fontsize=fs2)
+    plt.title('(b)')
+    plt.savefig(res_dir + 'exp1_n_samp_analysis.pdf', dpi=300, bbox = 'tight')
+    
 def analyse_fv_diff(data_to_analyse):
     print("data: %d" %len(data_to_analyse))
     fv_base = data_to_analyse[0] # fill value 0

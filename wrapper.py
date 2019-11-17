@@ -250,8 +250,8 @@ def main():
                 
         #save the nested list as a pickle object
         if params_dict['n_samp_mode']:
-            list_to_save = unique_comps
-            list_to_save.append(time_per_ns) # last list is of time
+            list_to_save = unique_comps # a list of lists, where each element (a list) is the list of the number of unique components for one Ns setting for all instances.
+            list_to_save.append(time_per_ns) # last list is of time # number of elements in this list = number of Ns settings
         else:
             list_to_save = ins_intersection
             
