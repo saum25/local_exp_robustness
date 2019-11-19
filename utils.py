@@ -240,5 +240,83 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     plt.title('Distribution of Temporal Explanations (RWC) for fv=0 vs fv=rest')
     
     plt.savefig(res_dir + 'fv_exps_its.pdf', dpi=300)
+
+
+def process_exps(explanations, fvs, iter):
+    """
+    code to post-process the exps from exp3
+    to create a list of lists, where each 
+    element of the outer list corresponds to
+    $U_n$ for each instance for fv1 and so on    
+    """
+    
+    n_fv = fvs
+    iterations = iter
+    fv_indices = np.arange(0, n_fv, 1)
+    n_unique_pi_pfv = []
+    n_unique_comp = []
+    n_unique_per_instance = []
+    
+    # from the input list of lists of lists make list of lists
+    for exps_inst in explanations:
+        for i in fv_indices:
+            temp = np.arange(i, (n_fv * iterations), n_fv)
+            print temp
+            for j in temp:
+                n_unique_pi_pfv.extend(exps_inst[j])
+            n_unique_comp.append(np.unique(n_unique_pi_pfv).shape[0])
+            n_unique_pi_pfv = []
+        n_unique_per_instance.append(n_unique_comp)
+        n_unique_comp =[]
+    print n_unique_per_instance
+
+    # rearrange the list of lists to generate each element in
+    # the list belong to one fv    
+    uc_per_fv = []
+    uc_final =[]
+    
+    for i in fv_indices:
+        for exps_temp in n_unique_per_instance:
+            uc_per_fv.append(exps_temp[i])
+        uc_final.append(uc_per_fv)
+        uc_per_fv = []
+    print uc_final
+    return uc_final
+
+def plot_exp3(explanations, result_path):
+    """
+    explanations: list of 5-dimensional lists, where each dim
+    corresponds to a fv.
+    result_path: save the fig at this directory    
+    """
+    
+    # we use seaborn for plotting, thus data needs to be in
+    # a 2-d array. column 0 -> fv id, and column 1 -> corresponding Un
+    n_instances = len(explanations[0])
+    n_fv = len(explanations)
+    data_array = np.zeros((n_instances * n_fv, 2))
+
+    idx = 0
+    fv_list = np.arange(0, n_fv, 1)
+    for i, j in zip(fv_list, explanations):
+        data_array[idx:idx+n_instances, 0] = i
+        data_array[idx:idx+n_instances, 1] = j
+        idx += n_instances
+    #print data_array
+    
+    # create a pandas data frame as seaborn expects one
+    # for exp 3_1 - temporal Jamendo
+    df_acts = pd.DataFrame(data_array, columns=['fill_value', 'n_unique_comps'])
+    df_acts.fill_value = df_acts['fill_value'].astype('int') # change the dtype
+    df_acts['fill_value'] = df_acts['fill_value'].map({0: '0', 1:'min(dataset)', 2: 'min(input)', 3:'mean(input)', 4:'Gaussian noise'})
+    df_acts.n_unique_comps = df_acts['n_unique_comps'].astype('int') # change the dtype
+    df_acts.to_csv(result_path + 'exp3_'+str(1) + '/' + 'exp3_'+ str(1) + '_fv_analysis.csv', index=False)
+    
+    sns.set(color_codes=True)
+    sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts)
+    plt.title('Distribution of the temporal explanations for different fill values')
+    plt.savefig(result_path + 'exp3'+ '_fv_analysis.pdf', dpi=300)
+
+
     
     
