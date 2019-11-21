@@ -9,16 +9,15 @@ import pickle
 import utils
 
 exp1 = False
-exp2 = False
-exp3 = True
+exp2 = True
+exp3 = False
 
 path_exp1 = 'results/exp1/'
 idxes_exp1 = [1, 2]
 path_exp2 = 'results/exp2/'
 idxes_exp2 = [1, 2, 3, 4]
 path_exp3 = 'results/exp3/'
-idxes_exp3 = [1]#, 2, 3, 4]
-
+idxes_exp3 = [1]
 
 if exp1 == True:
     path = path_exp1
@@ -47,13 +46,15 @@ for idx in exp_idx:
 # for the exp 1, exps must be a list of 10 elements where each element is itself a list
 # the first 9 are lists of unique elements one per setting of Ns, and the last one is the list that tells how much time SLIME takes for one exp for a setting of Ns
 
+
+# for the exp 2, each element in exps is a list of list of lists
+# i.e, for each instance, we generate explanations for each of the fv.
 if exp2 == True:
     exp_intersect = []    
     for exp in exps:
+        print('Explanations:'),
         print(exp)
-        print
         exp_intersect.append(utils.analyse_fv_diff(exp))
-
 
 # for experiment 3, we have exps as the list of list of lists
 # each element of the main list corresponds to one instance
