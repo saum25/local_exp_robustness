@@ -208,7 +208,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     n_instances_jam = len(fv_exps_its[0])
     print("Number of instances in Jamendo-based experiments: %d" %n_instances_jam)
     
-    # number of instances (excerpt) for the Jamendo exps: index 0, and 1 correspond to that
+    # number of instances (excerpt) for the Jamendo exps: index 2, and 3 correspond to that
     n_instances_rwc = len(fv_exps_its[2])
     print("Number of instances in RWC-based experiment: %d" %n_instances_rwc)    
     
@@ -256,8 +256,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
         i += len(exps)
 
     #print data_array_jam_exp2
-    print('%d'%np.sum(data_array_jam_exp1 == data_array_jam_exp2))
- 
+    #print('%d'%np.sum(data_array_jam_exp1 == data_array_jam_exp2))
     i = 0
     # fill exp 1 data
     for c_id, exps in zip(comp_ids, exps_final[2]):
@@ -265,8 +264,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
         data_array_rwc_exp1[i:i+len(exps), 1]=exps
         i += len(exps)
 
-    #print data_array_rwc_exp1
-     
+    #print data_array_rwc_exp1     
     i = 0
     # fill exp 2 data
     for c_id, exps in zip(comp_ids, exps_final[3]):
@@ -334,7 +332,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
 
 
-def process_exps(explanations, fvs, iter):
+def process_exps(explanations, fvs, iterations):
     """
     code to post-process the exps from exp3
     to create a list of lists, where each 
@@ -343,7 +341,7 @@ def process_exps(explanations, fvs, iter):
     """
     
     n_fv = fvs
-    iterations = iter
+    iterations = iterations
     fv_indices = np.arange(0, n_fv, 1)
     n_unique_pi_pfv = []
     n_unique_comp = []
@@ -377,38 +375,123 @@ def process_exps(explanations, fvs, iter):
 
 def plot_exp3(explanations, result_path):
     """
-    explanations: list of 5-dimensional lists, where each dim
+    Plots the fig 4.10 in the thesis.
+    explanations: list of lists of 5-dimensional lists, where each dim
     corresponds to a fv.
     result_path: save the fig at this directory    
     """
     
     # we use seaborn for plotting, thus data needs to be in
     # a 2-d array. column 0 -> fv id, and column 1 -> corresponding Un
-    n_instances = len(explanations[0])
-    n_fv = len(explanations)
-    data_array = np.zeros((n_instances * n_fv, 2))
+    # in the input list jamendo corresponds to ids 0 and 1, and RWC to ids 2, 3
+    n_instances_jam = len(explanations[0][0])
+    n_instances_rwc = len(explanations[2][0])
+
+    print("number of instances jamendo: %d rwc: %d" %(n_instances_jam, n_instances_rwc))
+
+    n_fv = len(explanations[0]) # will be same for both the datasets
+    
+    # create four data arrays
+    data_array_jam_exp1 = np.zeros((n_instances_jam * n_fv, 2))
+    data_array_jam_exp2 = np.zeros((n_instances_jam * n_fv, 2))
+    data_array_rwc_exp1 = np.zeros((n_instances_rwc * n_fv, 2))
+    data_array_rwc_exp2 = np.zeros((n_instances_rwc * n_fv, 2))
+    
+    print("data arrays jamendo exp1: (%d, %d)" %(data_array_jam_exp1.shape))
+    print("data arrays jamendo exp2: (%d, %d)" %(data_array_jam_exp2.shape))
+    print("data arrays rwc exp1: (%d, %d)" %(data_array_rwc_exp1.shape))
+    print("data arrays rwc exp2: (%d, %d)" %(data_array_rwc_exp2.shape))
 
     idx = 0
     fv_list = np.arange(0, n_fv, 1)
-    for i, j in zip(fv_list, explanations):
-        data_array[idx:idx+n_instances, 0] = i
-        data_array[idx:idx+n_instances, 1] = j
-        idx += n_instances
-    #print data_array
+    
+    # exp3_1 => jamendo temporal    
+    for i, j in zip(fv_list, explanations[0]):
+        data_array_jam_exp1[idx:idx+n_instances_jam, 0] = i
+        data_array_jam_exp1[idx:idx+n_instances_jam, 1] = j
+        idx += n_instances_jam
+
+    idx = 0
+    # exp3_2 => jamendo spectral    
+    for i, j in zip(fv_list, explanations[1]):
+        data_array_jam_exp2[idx:idx+n_instances_jam, 0] = i
+        data_array_jam_exp2[idx:idx+n_instances_jam, 1] = j
+        idx += n_instances_jam
+
+    idx = 0
+    # exp3_2 => rwc temporal    
+    for i, j in zip(fv_list, explanations[2]):
+        data_array_rwc_exp1[idx:idx+n_instances_rwc, 0] = i
+        data_array_rwc_exp1[idx:idx+n_instances_rwc, 1] = j
+        idx += n_instances_rwc
+
+    idx = 0
+    # exp3_2 => rwc spectral    
+    for i, j in zip(fv_list, explanations[3]):
+        data_array_rwc_exp2[idx:idx+n_instances_rwc, 0] = i
+        data_array_rwc_exp2[idx:idx+n_instances_rwc, 1] = j
+        idx += n_instances_rwc
     
     # create a pandas data frame as seaborn expects one
     # for exp 3_1 - temporal Jamendo
-    df_acts = pd.DataFrame(data_array, columns=['fill_value', 'n_unique_comps'])
-    df_acts.fill_value = df_acts['fill_value'].astype('int') # change the dtype
-    df_acts['fill_value'] = df_acts['fill_value'].map({0: r'$Zero$', 1:r'$Min_{dataset}$', 2: r'$Min_{input}$', 3:r'$Mean_{input}$', 4:r'$Noise_{Gaussian}$'})
-    df_acts.n_unique_comps = df_acts['n_unique_comps'].astype('int') # change the dtype
-    df_acts.to_csv(result_path + 'exp3_'+str(1) + '/' + 'exp3_'+ str(1) + '_fv_analysis.csv', index=False)
+    df_acts_jam_exp1 = pd.DataFrame(data_array_jam_exp1, columns=['fill_value', 'n_unique_comps'])
+    df_acts_jam_exp1.fill_value = df_acts_jam_exp1['fill_value'].astype('int') # change the dtype
+    #df_acts_jam_exp1['fill_value'] = df_acts_jam_exp1['fill_value'].map({0: r'$Zero$', 1:r'$Min_{dataset}$', 2: r'$Min_{input}$', 3:r'$Mean_{input}$', 4:r'$Noise_{Gaussian}$'})
+    df_acts_jam_exp1.n_unique_comps = df_acts_jam_exp1['n_unique_comps'].astype('int') # change the dtype
+    df_acts_jam_exp1.to_csv(result_path + 'exp3_'+str(1) + '/' + 'exp3_'+ str(1) + '_fv_analysis.csv', index=False)
+
+    # for exp 3_2 - spectral jamendo
+    df_acts_jam_exp2 = pd.DataFrame(data_array_jam_exp2, columns=['fill_value', 'n_unique_comps'])
+    df_acts_jam_exp2.fill_value = df_acts_jam_exp2['fill_value'].astype('int') # change the dtype
+    #df_acts_jam_exp2['fill_value'] = df_acts_jam_exp2['fill_value'].map({0: r'$Zero$', 1:r'$Min_{dataset}$', 2: r'$Min_{input}$', 3:r'$Mean_{input}$', 4:r'$Noise_{Gaussian}$'})
+    df_acts_jam_exp2.n_unique_comps = df_acts_jam_exp2['n_unique_comps'].astype('int') # change the dtype
+    df_acts_jam_exp2.to_csv(result_path + 'exp3_'+str(2) + '/' + 'exp3_'+ str(2) + '_fv_analysis.csv', index=False)
+
+    # for exp 3_3 - temporal rwc
+    df_acts_rwc_exp1 = pd.DataFrame(data_array_rwc_exp1, columns=['fill_value', 'n_unique_comps'])
+    df_acts_rwc_exp1.fill_value = df_acts_rwc_exp1['fill_value'].astype('int') # change the dtype
+    df_acts_rwc_exp1['fill_value'] = df_acts_rwc_exp1['fill_value'].map({0: r'$zero$', 1:r'$min_{data}$', 2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4:r'$N_g$'})
+    df_acts_rwc_exp1.n_unique_comps = df_acts_rwc_exp1['n_unique_comps'].astype('int') # change the dtype
+    df_acts_rwc_exp1.to_csv(result_path + 'exp3_'+str(3) + '/' + 'exp3_'+ str(3) + '_fv_analysis.csv', index=False)
+
+    # for exp 3_4 - spectral rwc
+    df_acts_rwc_exp2 = pd.DataFrame(data_array_rwc_exp2, columns=['fill_value', 'n_unique_comps'])
+    df_acts_rwc_exp2.fill_value = df_acts_rwc_exp2['fill_value'].astype('int') # change the dtype
+    df_acts_rwc_exp2['fill_value'] = df_acts_rwc_exp2['fill_value'].map({0: r'$zero$', 1:r'$min_{data}$', 2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4:r'$N_g$'})
+    df_acts_rwc_exp2.n_unique_comps = df_acts_rwc_exp2['n_unique_comps'].astype('int') # change the dtype
+    df_acts_rwc_exp2.to_csv(result_path + 'exp3_'+str(4) + '/' + 'exp3_'+ str(4) + '_fv_analysis.csv', index=False)
     
     sns.set(color_codes=True)
-    sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts)
+    plt.figure(figsize=(8, 6))
+    
+    plt.subplot(2, 2, 1)    
+    sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_jam_exp1)
+    plt.title('(a)')
     plt.ylabel(r'$U_n$')
-    plt.xlabel("Synthetic content")
-    plt.savefig(result_path + 'exp3'+ '_fv_analysis.pdf', dpi=300, bbox = 'tight')
+    plt.xticks([]) # turns off x-axis ticks
+    plt.xlabel('')
+
+    plt.subplot(2, 2, 2)
+    sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_jam_exp2)    
+    plt.title('(b)')
+    plt.xticks([]) # turns off x-axis ticks
+    plt.xlabel('')
+    plt.ylabel(r'$U_n$')
+    
+    plt.subplot(2, 2, 3)
+    sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_rwc_exp1)     
+    plt.title('(c)')
+    plt.ylabel(r'$U_n$')
+    plt.xlabel('Content')
+    
+    plt.subplot(2, 2, 4)
+    sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_rwc_exp2)
+    plt.title('(d)')
+    plt.xlabel('Content')
+    plt.ylabel(r'$U_n$')
+
+    plt.tight_layout()    
+    plt.savefig(result_path + 'slime_fv_analysis.pdf', dpi=300, bbox = 'tight')
 
 
     

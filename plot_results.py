@@ -9,15 +9,15 @@ import pickle
 import utils
 
 exp1 = False
-exp2 = True
-exp3 = False
+exp2 = False
+exp3 = True
 
 path_exp1 = 'results/exp1/'
 idxes_exp1 = [1, 2]
 path_exp2 = 'results/exp2/'
 idxes_exp2 = [1, 2, 3, 4]
 path_exp3 = 'results/exp3/'
-idxes_exp3 = [1]
+idxes_exp3 = [1, 2, 3, 4]
 
 if exp1 == True:
     path = path_exp1
@@ -31,7 +31,7 @@ else:
     
 N_samples = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000]
 fvs = 5
-iter = 2
+iterations = 5
 exps = []
 path_var = path.split('/')[1]
 
@@ -61,14 +61,22 @@ if exp2 == True:
 # each element of a list corresponding to an instance represents Top-3 exps
 # a total of 5 (num of fv's) * 5 (num_iters) exps for each instance
 # ordered as exp[0][0] = instance_1_exp_fv1, exp[0][1] = instance_1_exp_fv2 and so on
-
+exp_pp = []
 if exp3 == True:
-    exp_pp = utils.process_exps(exps[0], fvs, iter)
+    for exp_idx in range(len(exps)):
+        exp_pp.append(utils.process_exps(exps[exp_idx], fvs, iterations))
 
 #plot results
 if exp1:
     utils.plot_unique_components(exps, N_samples, path)
-elif exp2 == True:
+elif exp2:
     utils.plot_fv_senstivity(exp_intersect, path)
 else:
     utils.plot_exp3(exp_pp, path)
+    
+    
+    
+    
+    
+    
+    
