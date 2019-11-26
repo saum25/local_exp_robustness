@@ -195,7 +195,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     fv_exps_its: list of list of list of lists. Each element in the outer-most list
     corresponds to one experiment, i.e., results for exp2_1
     res_dir: results directory
-    Plots Fig. 4.9 in the thesis.
+    Plots Fig. 4.10 in the thesis.
     """
 
     print("Visualisation data:"),
@@ -225,7 +225,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     data_array_rwc_exp2 = np.zeros((n_instances_rwc*len(fv_exps_its[0][2]), 2))
     
     # labels are same for both cases as the number of fvs are the same
-    comp_ids = np.arange(1, len(fv_exps_its[0][0])+1).tolist()
+    comp_ids = np.arange(1, len(fv_exps_its[0][0])).tolist() # just 4 compid's we ignore min(data)
     print("Comparison ids:"),
     print comp_ids
 
@@ -233,7 +233,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     exps_its=[]
     exps_final = []
     for res_exp in fv_exps_its:
-        for x in range(len(res_exp[0])):
+        for x in [0, 2, 3, 4]: #range(len(res_exp[0])): # just for four cases, we ignore min(data)
             exps_its.append([d[x] for d in res_exp])
         exps_final.append(exps_its)
         exps_its = []
@@ -277,27 +277,27 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     # create a pandas data frame as seaborn expects one
     # exp2_1 -> Jamendo temporal
     df_acts_exp1 = pd.DataFrame(data_array_jam_exp1, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$', 5:r'$C_5$'})
+    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
     df_acts_exp1.n_common_exps = df_acts_exp1['n_common_exps'].astype('int') # change the dtype
     df_acts_exp1.to_csv(res_dir + 'exp2_'+str(1) + '/' + 'exp2_'+ str(1) + '_fv_exps_its.csv', index=False)
 
 
     # exp2_2 -> Jamendo spectral
     df_acts_exp2 = pd.DataFrame(data_array_jam_exp2, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp2['fv_comp_ids'] = df_acts_exp2['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$', 5:r'$C_5$'})
+    df_acts_exp2['fv_comp_ids'] = df_acts_exp2['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
     df_acts_exp2.n_common_exps = df_acts_exp2['n_common_exps'].astype('int') # change the dtype
     df_acts_exp2.to_csv(res_dir + 'exp2_'+str(2) + '/' + 'exp2_'+ str(2) + '_fv_exps_its.csv', index=False)
 
     # exp2_3 -> RWC temporal
     df_acts_exp3 = pd.DataFrame(data_array_rwc_exp1, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp3['fv_comp_ids'] = df_acts_exp3['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$', 5:r'$C_5$'})
+    df_acts_exp3['fv_comp_ids'] = df_acts_exp3['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
     df_acts_exp3.n_common_exps = df_acts_exp3['n_common_exps'].astype('int') # change the dtype
     df_acts_exp3.to_csv(res_dir + 'exp2_'+str(3) + '/' + 'exp2_'+ str(3) + '_fv_exps_its.csv', index=False)
 
 
     # exp2_4 -> RWC spectral
     df_acts_exp4 = pd.DataFrame(data_array_rwc_exp2, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp4['fv_comp_ids'] = df_acts_exp4['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$', 5:r'$C_5$'})
+    df_acts_exp4['fv_comp_ids'] = df_acts_exp4['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
     df_acts_exp4.n_common_exps = df_acts_exp4['n_common_exps'].astype('int') # change the dtype
     df_acts_exp4.to_csv(res_dir + 'exp2_'+str(4) + '/' + 'exp2_'+ str(4) + '_fv_exps_its.csv', index=False)
         
@@ -316,6 +316,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     plt.title('(b)')
     plt.xticks([]) # turns off x-axis ticks
     plt.xlabel('')
+    plt.ylabel(r'$N_{ce}$')
     
     plt.subplot(2, 2, 3)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp3)    
@@ -327,6 +328,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp4)    
     plt.title('(d)')
     plt.xlabel('Comparison labels')
+    plt.ylabel(r'$N_{ce}$')
 
     plt.tight_layout()
     plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
@@ -375,7 +377,7 @@ def process_exps(explanations, fvs, iterations):
 
 def plot_exp3(explanations, result_path):
     """
-    Plots the fig 4.10 in the thesis.
+    Plots the fig 4.9 in the thesis.
     explanations: list of lists of 5-dimensional lists, where each dim
     corresponds to a fv.
     result_path: save the fig at this directory    
@@ -482,12 +484,12 @@ def plot_exp3(explanations, result_path):
     sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_rwc_exp1)     
     plt.title('(c)')
     plt.ylabel(r'$U_n$')
-    plt.xlabel('Content')
+    plt.xlabel('Content type')
     
     plt.subplot(2, 2, 4)
     sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_rwc_exp2)
     plt.title('(d)')
-    plt.xlabel('Content')
+    plt.xlabel('Content type')
     plt.ylabel(r'$U_n$')
 
     plt.tight_layout()    

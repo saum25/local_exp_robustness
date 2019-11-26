@@ -9,8 +9,8 @@ import pickle
 import utils
 
 exp1 = False
-exp2 = False
-exp3 = True
+exp2 = True
+exp3 = False
 
 path_exp1 = 'results/exp1/'
 idxes_exp1 = [1, 2]
