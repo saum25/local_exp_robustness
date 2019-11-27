@@ -45,7 +45,7 @@ def normalise(x):
     else:
         return((x-x.min())/(x.max()-x.min()))
 
-def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None):
+def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None, cm = 'coolwarm'):
     '''
     save input
     @param: inp_mel: input mel spectrogram
@@ -56,9 +56,9 @@ def save_mel(inp_mel, res_dir, prob=None, norm = True, fill_val = None):
     '''
     plt.figure(figsize=(6, 4))
     if norm:
-        disp.specshow(normalise(inp_mel), x_axis = 'time', y_axis='mel', sr=22050, hop_length=315, fmin=27.5, fmax=8000, cmap = 'coolwarm')
+        disp.specshow(normalise(inp_mel), x_axis = 'time', y_axis='mel', sr=22050, hop_length=315, fmin=27.5, fmax=8000, cmap = cm)
     else:
-        disp.specshow(inp_mel, x_axis = 'time', y_axis='mel', sr=22050, hop_length=315, fmin=27.5, fmax=8000, cmap = 'coolwarm')
+        disp.specshow(inp_mel, x_axis = 'time', y_axis='mel', sr=22050, hop_length=315, fmin=27.5, fmax=8000, cmap = cm)
     if prob is not None: # save input
         plt.title('mel spectrogram')
         plt.tight_layout()
@@ -495,6 +495,33 @@ def plot_exp3(explanations, result_path):
     plt.tight_layout()    
     plt.savefig(result_path + 'slime_fv_analysis.pdf', dpi=300, bbox = 'tight')
 
+def plot_segments(seg_list, res_dir, cm = 'coolwarm'):
+    """
+    plots the segment figure in the paper Fig. 4.9
+    """
+    fs = 9
+    plt.figure(figsize=(8, 3))
 
+    plt.subplot(1, 2, 1)
+    disp.specshow(seg_list[0].T, x_axis='time', hop_length= 315, y_axis='mel', fmin=27.5, fmax=8000, sr=22050,cmap=cm)
+    plt.ylabel('Freq(Hz)', labelpad=0.5, fontsize=fs)
+    plt.xlabel('Time(sec)', labelpad=0.5, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.title('(A)', fontsize=fs)
+
+    plt.subplot(1, 2, 2)
+    disp.specshow(seg_list[1].T, x_axis='time', hop_length= 315, y_axis= 'off', fmin=27.5, fmax=8000, sr=22050,cmap=cm)
+    plt.xlabel('Time(sec)', labelpad=1, fontsize=fs)
+    #plt.ylabel('Freq(Hz)', labelpad=1, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.title('(B)', fontsize=fs)    
+    
+    plt.subplots_adjust(bottom=0.125, wspace=0.25, hspace=0.25)   
+    cax = plt.axes([0.93, 0.11, 0.0150, 0.77])
+    cbar = plt.colorbar(cax=cax, ticks=[0, 2, 4, 6, 8])
+    cbar.ax.tick_params(labelsize=fs)
+    plt.savefig(res_dir, dpi=300, bbox = 'tight')
     
     

@@ -9,8 +9,22 @@ import pickle
 import utils
 
 exp1 = False
-exp2 = True
+exp2 = False
 exp3 = False
+seg_fig = True
+
+if seg_fig:
+    segs = []
+    path_segs = 'results/'
+    seg_type = ['segments_temporal', 'segments_spectral']
+    for i in range(len(seg_type)):
+        path_update = path_segs + seg_type[i]
+        print "loading the segment:"
+        print path_update
+        with open(path_update, 'rb') as fv:
+            segs.append(pickle.load(fv))        
+    utils.plot_segments(segs, path_segs + 'segments.pdf', cm = 'gray')
+    exit(0)
 
 path_exp1 = 'results/exp1/'
 idxes_exp1 = [1, 2]

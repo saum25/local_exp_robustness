@@ -193,13 +193,14 @@ def main():
                     print("prediction probability: %f" %result[0][0])
                     
                     # save the instance
+                    
                     #utils.save_mel(mel_spect.T, res_dir = results_path, prob = result[0][0], norm = False)
                     
                     # use SLIME to explain the prediction
                     if params_dict['n_samp_mode']:
                         fill_value = [0]
                     else:
-                        fill_value = [0, min_val, np.min(mel_spect), np.mean(mel_spect), 'noise']
+                        fill_value = [0]#, min_val, np.min(mel_spect), np.mean(mel_spect), 'noise']
                     
                     for idx in range(args.iterate):
                         print("---iteration:%d----" %(idx+1))
@@ -211,7 +212,7 @@ def main():
                             explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, 
                                                                                top_labels = 1, num_samples = n_samples, distance_metric = args.dist_metric, sess = sess, 
                                                                                inp_data_sym = inp_ph, score_sym = pred, exp_type= params_dict['e_type'], n_segments= params_dict['n_seg'], batch_size=16, noise_data = noise_arr_norm)
-                            #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val)
+                            utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val, cm = 'gray')
                             agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=False, hide_rest=True, num_features=3)
                             
                             if params_dict['n_samp_mode']:
@@ -221,7 +222,7 @@ def main():
                             
                             print("SLIME explanations: "),
                             print(exp_comp_weights)
-                            #print("prediction error: %f" %(pred_err))
+                            print("prediction error: %f" %(pred_err))
                             #utils.save_mel(agg_exp.T, results_path, prob=None, norm= False, fill_val= val)
                             if params_dict['n_samp_mode']:
                                 agg_comps_per_instance.extend([ele[0] for ele in exp_comp_weights])
@@ -260,6 +261,11 @@ def main():
         
         with open("results/exps", "wb") as fp:
             pickle.dump(list_to_save, fp)
+
+        # saves the segments for plotting the temporal and spectral segments.
+        '''with open("results/segments", "wb") as fp:
+            pickle.dump(segments, fp)'''
+
         
 if __name__== "__main__":
     main()
