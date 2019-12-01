@@ -7,11 +7,14 @@ This file plots the figures in Chapter 4 of the thesis.
 
 import pickle
 import utils
+import sys
 
 exp1 = False
 exp2 = False
 exp3 = False
-seg_fig = True
+seg_fig = False
+exp4 = True
+
 
 if seg_fig:
     segs = []
@@ -24,7 +27,7 @@ if seg_fig:
         with open(path_update, 'rb') as fv:
             segs.append(pickle.load(fv))        
     utils.plot_segments(segs, path_segs + 'segments.pdf', cm = 'gray')
-    exit(0)
+    sys.exit(0)
 
 path_exp1 = 'results/exp1/'
 idxes_exp1 = [1, 2]
@@ -32,6 +35,8 @@ path_exp2 = 'results/exp2/'
 idxes_exp2 = [1, 2, 3, 4]
 path_exp3 = 'results/exp3/'
 idxes_exp3 = [1, 2, 3, 4]
+path_exp4 = 'results/exp4/'
+idxes_exp4 = [1]
 
 if exp1 == True:
     path = path_exp1
@@ -39,9 +44,12 @@ if exp1 == True:
 elif exp2 == True:
     path = path_exp2
     exp_idx = idxes_exp2
-else:
+elif exp3 == True:
     path = path_exp3
     exp_idx = idxes_exp3
+else:
+    path = path_exp4
+    exp_idx = idxes_exp4
     
 N_samples = [1000, 5000, 10000, 20000, 30000, 40000, 50000, 60000, 70000]
 fvs = 5
@@ -79,15 +87,30 @@ exp_pp = []
 if exp3 == True:
     for exp_idx in range(len(exps)):
         exp_pp.append(utils.process_exps(exps[exp_idx], fvs, iterations))
+        
+        
+# for exp4, also need to restore the ground truth
+if exp4 == True:
+    exp_intersect = []
+    with open("synth_data/data", 'rb') as fp:
+        synth_gt_temp = pickle.load(fp)
+        synth_gt = [ele[1] for ele in synth_gt_temp]
+        print("length gt: %d fv_exps:%d" %(len(synth_gt, len(exps))))
+        if len(synth_gt) == len(exps):
+            exp_intersect_exp4 = (utils.analyse_fv_diff_exp4(synth_gt, exps))
+        else:
+            print("explanation length does not match!!")
+            sys.exit(0)
 
 #plot results
 if exp1:
     utils.plot_unique_components(exps, N_samples, path)
 elif exp2:
     utils.plot_fv_senstivity(exp_intersect, path)
-else:
+elif exp3:
     utils.plot_exp3(exp_pp, path)
-    
+else:
+    utils.plot_fv_senstivity_exp4(exp_intersect_exp4, path)    
     
     
     

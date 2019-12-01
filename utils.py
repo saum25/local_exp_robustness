@@ -187,6 +187,26 @@ def analyse_fv_diff(data_to_analyse):
         
     return res
 
+def analyse_fv_diff_exp4(groundtruth, data_to_analyse):
+    """
+    This function computes the cardinality of the intersection set calculated 
+    using explanations from a base fill value = 0 and another fill value = e.g., noise
+    groundtruth: location (super-samples) of vocals
+    data_to_analyse: list of list of lists
+    """
+    print("explanations are for %d instances" %len(data_to_analyse))
+    res = []
+
+    for inst_exps, gt in zip(data_to_analyse, groundtruth):
+        exp_base = gt # corresponds to ground-truth
+        exp_inter_pins = []
+        for exp in inst_exps:
+            exp_inter_pins.append(len(set(exp) & set(exp_base)))
+        res.append(exp_inter_pins)
+        exp_inter_pins = []
+        
+    return res
+
 
 def plot_fv_senstivity(fv_exps_its, res_dir):
     """
@@ -329,6 +349,68 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     plt.title('(d)')
     plt.xlabel('Comparison labels')
     plt.ylabel(r'$N_{ce}$')
+
+    plt.tight_layout()
+    plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
+    
+    
+def plot_fv_senstivity_exp4(fv_exps_its, res_dir):
+    """
+    This function plots the cardinality of the intersection set
+    w.r.t. each pair-wise computation id.
+    fv_exps_its: list of list of list of lists. Each element in the outer-most list
+    corresponds to one experiment, i.e., results for exp2_1
+    res_dir: results directory
+    Plots Fig. 4.10 in the thesis.
+    """
+
+    print("Visualisation data:"),
+    print(fv_exps_its)
+    
+    # number of instances (excerpt)
+    n_instances = len(fv_exps_its)
+    print("Number of instances in experiment: %d" %n_instances)
+        
+    # create a 2-d matrix, column 0 -> comparison id, e.g., 1,  column 1 -> number of common explanations per instance for that comparison id
+    data_array_exp1 = np.zeros((n_instances*len(fv_exps_its[0]), 2))
+    print("data_array shape:"),
+    print data_array_exp1.shape
+    
+    # labels are same for both cases as the number of fvs are the same
+    comp_ids = np.arange(1, len(fv_exps_its[0])).tolist() # just 4 compid's we ignore min(data)
+    print("Comparison ids:"),
+    print comp_ids
+
+    # for the ease of plotting, for each experiment, aggregate data for one comparison id together    
+    exps_final = []
+    #for res_exp in fv_exps_its:
+    for x in [0, 2, 3, 4]: #range(len(res_exp[0])): # just for four cases, we ignore min(data)
+        exps_final.append([d[x] for d in fv_exps_its])
+    print("rearranged data:"),
+    print(exps_final)
+    
+    i = 0
+    # fill exp 1 data
+    for c_id, exps in zip(comp_ids, exps_final):
+        data_array_exp1[i:i+len(exps), 0]=c_id 
+        data_array_exp1[i:i+len(exps), 1]=exps
+        i += len(exps)
+
+    #print data_array_jam_exp1 
+    
+    # create a pandas data frame as seaborn expects one
+    # exp2_1 -> Jamendo temporal
+    df_acts_exp1 = pd.DataFrame(data_array_exp1, columns=['fv_comp_ids', 'n_common_exps'])
+    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    df_acts_exp1.n_common_exps = df_acts_exp1['n_common_exps'].astype('int') # change the dtype
+    df_acts_exp1.to_csv(res_dir + 'exp2_'+str(1) + '/' + 'exp2_'+ str(1) + '_fv_exps_its.csv', index=False)
+        
+    # plotting the distribution of neurons
+    sns.set(color_codes=True)
+    plt.figure(figsize=(8, 6))
+    sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp1)    
+    plt.ylabel(r'$N_{ce}$')
+    plt.xlabel('Comparison labels')
 
     plt.tight_layout()
     plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
