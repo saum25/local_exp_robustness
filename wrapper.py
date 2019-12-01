@@ -62,6 +62,7 @@ def main():
     parser.add_argument('--dataset_path', type=str, default='../deep_inversion/', help='dataset path')
     parser.add_argument('--dataset_name', type=str, default='jamendo', help='dataset name')
     parser.add_argument('--n_samp_exp', default = False, action="store_true", help='if given, runs the code in exp1 mode, i.e., finding Ns')
+    parser.add_argument('--synth', default = False, action="store_true", help='if given, runs the code in exp4 mode, i.e., optimal content type')
     
     args = parser.parse_args()
        
@@ -88,6 +89,7 @@ def main():
                'n_samp_mode': args.n_samp_exp,
                'e_type': args.e_type,
                'n_seg': args.n_seg,
+               'sd': args.synth,
                 # results params
                'results_path':results_path,
                }
@@ -113,7 +115,8 @@ def main():
     print " distance_metric: %s" % params_dict['dist_metric']
     print " n_samp_mode: %r" % params_dict['n_samp_mode']
     print " explanation type: %s" % params_dict['e_type']
-    print " n_segments: %d" % params_dict['n_seg']      
+    print " n_segments: %d" % params_dict['n_seg']     
+    print " synth data mode: %r" % params_dict['sd'] 
     print "-------------"
     print " results dir: %s" % params_dict['results_path']
     print "-------------"
@@ -175,9 +178,12 @@ def main():
                 print("----------------------------")
                 print("file number: %d" %(file_idx+1))
 
-                sampling_seed = file_idx # result in different instance indices per file
-                np.random.seed(sampling_seed)
-                excerpt_idx = np.random.randint(low=inst_ignore, high=mel_spects[file_idx].shape[0]-inst_ignore, size=params_dict['n_inst_pf'])
+                if params_dict['sd'] == True:
+                    excerpt_idx = [0]
+                else:
+                    sampling_seed = file_idx # result in different instance indices per file
+                    np.random.seed(sampling_seed)
+                    excerpt_idx = np.random.randint(low=inst_ignore, high=mel_spects[file_idx].shape[0]-inst_ignore, size=params_dict['n_inst_pf'])
                 print("sampled instance indices:"),
                 print(excerpt_idx)
                       
@@ -200,7 +206,7 @@ def main():
                     if params_dict['n_samp_mode']:
                         fill_value = [0]
                     else:
-                        fill_value = [0]#, min_val, np.min(mel_spect), np.mean(mel_spect), 'noise']
+                        fill_value = [0, min_val, np.min(mel_spect), np.mean(mel_spect), 'noise']
                     
                     for idx in range(args.iterate):
                         print("---iteration:%d----" %(idx+1))
@@ -212,8 +218,8 @@ def main():
                             explanation, segments = explainer.explain_instance(image = mel_spect, classifier_fn = prediction_fn, hide_color = val, 
                                                                                top_labels = 1, num_samples = n_samples, distance_metric = args.dist_metric, sess = sess, 
                                                                                inp_data_sym = inp_ph, score_sym = pred, exp_type= params_dict['e_type'], n_segments= params_dict['n_seg'], batch_size=16, noise_data = noise_arr_norm)
-                            utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val, cm = 'gray')
-                            agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=False, hide_rest=True, num_features=3)
+                            #utils.save_mel(segments.T, results_path, prob=None, norm=False, fill_val=val, cm = 'gray')
+                            agg_exp, _, exp_comp_weights, pred_err = explanation.get_image_and_mask(label = 0, positive_only=True, hide_rest=True, num_features=3)
                             
                             if params_dict['n_samp_mode']:
                                 exp_t = time.time()-start

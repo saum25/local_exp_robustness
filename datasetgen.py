@@ -23,7 +23,7 @@ import random
 
 cf_model_path = 'models/svd/model1/Jamendo_augment_mel'
 meanstd_file_path = 'models/svd'
-results_path = 'results/exp4/'
+results_path = 'synth_data/'
 
 
 def create_segments(image, exp_type, n_segments):
