@@ -14,8 +14,24 @@ exp2 = False
 exp3 = False
 seg_fig = False
 exp4 = True
+ijcnn_fig4 = False
 
 
+if ijcnn_fig4:
+    data_ijcnn_fig4 = []
+    path_data = 'results/ijcnn_fig4/'
+    # each data_i below contains the same input and its pre-defined perturbed version for different content types.
+    data_file_name = ['data_1', 'data_2', 'data_3', 'data_4', 'data_5_noise_normalised'] # ['data_5_noise_not_normalised']
+    for i in range(len(data_file_name)):
+        path_iter = path_data + data_file_name[i]
+        print "loading data from:"
+        print path_iter
+        with open(path_iter, 'rb') as fv:
+            data_ijcnn_fig4.append(pickle.load(fv))
+    print "data for %d content types:" %(len(data_ijcnn_fig4))
+    utils.plot_ijcnn_fig3(data_ijcnn_fig4, path_data + 'slime_content_types.pdf')
+    sys.exit(0)
+    
 if seg_fig:
     segs = []
     path_segs = 'results/'
@@ -95,9 +111,9 @@ if exp4 == True:
     with open("synth_data/data", 'rb') as fp:
         synth_gt_temp = pickle.load(fp)
         synth_gt = [ele[1] for ele in synth_gt_temp]
-        print("length gt: %d fv_exps:%d" %(len(synth_gt, len(exps))))
-        if len(synth_gt) == len(exps):
-            exp_intersect_exp4 = (utils.analyse_fv_diff_exp4(synth_gt, exps))
+        print("length gt: %d fv_exps:%d" %(len(synth_gt), len(exps[0])))
+        if len(synth_gt) == len(exps[0]):
+            exp_intersect_exp4 = (utils.analyse_fv_diff_exp4(synth_gt, exps[0]))
         else:
             print("explanation length does not match!!")
             sys.exit(0)

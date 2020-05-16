@@ -13,6 +13,7 @@ mpl.rc('font', size=6) # code to change the fontsize of x-axis ticks when plotti
 import librosa.display as disp
 import seaborn as sns
 import pandas as pd
+from collections import Counter
 
 def getNumParams(tensors):
     return np.sum([np.prod(t.get_shape().as_list()) for t in tensors])
@@ -89,7 +90,7 @@ def plot_unique_components(unique_comps, n_samples, res_dir):
     num_u_comps_2 = 0 # RWC
     i = 0
     fs1 = 6
-    fs2 = 10
+    fs2 = 17#10
     
     # calculate the number of unique components by aggregating length of all the lists
     for u_comps in unique_comps[0][0:9]: # 0 -> Jamendo results, idx = 0 to idx = 8 are the unique elements, idx=9 are the time durations
@@ -147,7 +148,7 @@ def plot_unique_components(unique_comps, n_samples, res_dir):
     # plotting the distribution of unique components for different Ns values
     # exp1_1 - temporal Jamendo
 
-    plt.figure(figsize=(8, 5))
+    plt.figure(figsize=(10, 7))
 
     sns.set(color_codes=True)
     plt.subplot(211)
@@ -156,7 +157,7 @@ def plot_unique_components(unique_comps, n_samples, res_dir):
     plt.xticks([]) # turns off x-axis ticks
     plt.xlabel('')
     plt.yticks(fontsize=fs2)
-    plt.title('(a)')
+    plt.title('(a)', fontsize=fs2)
     
     # exp1_2 - temporal RWC
     plt.subplot(212)
@@ -165,8 +166,8 @@ def plot_unique_components(unique_comps, n_samples, res_dir):
     plt.xlabel('Number of samples ' r'($N_s$)', fontsize=fs2)
     plt.xticks(fontsize=fs2)
     plt.yticks(fontsize=fs2)
-    plt.title('(b)')
-    plt.savefig(res_dir + 'exp1_n_samp_analysis.pdf', dpi=300, bbox = 'tight')
+    plt.title('(b)', fontsize=fs2)
+    plt.savefig(res_dir + 'exp1_n_samp_analysis.pdf', dpi=300, bbox_inches = 'tight')
     
 def analyse_fv_diff(data_to_analyse):
     """
@@ -233,19 +234,19 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     print("Number of instances in RWC-based experiment: %d" %n_instances_rwc)    
     
     # create a 2-d matrix, column 0 -> comparison id, e.g., 1,  column 1 -> number of common explanations per instance for that comparison id
-    data_array_jam_exp1 = np.zeros((n_instances_jam*len(fv_exps_its[0][0]), 2))
+    data_array_jam_exp1 = np.zeros((n_instances_jam*(len(fv_exps_its[0][0])-2), 2)) # did -2 as I am not using information from min_data and zero content types. New way of plotting the figure
     print("data_array shape [Jamendo]:"),
     print data_array_jam_exp1.shape
-    data_array_jam_exp2 = np.zeros((n_instances_jam*len(fv_exps_its[0][0]), 2))
+    data_array_jam_exp2 = np.zeros((n_instances_jam*(len(fv_exps_its[0][0])-2), 2))
 
 
-    data_array_rwc_exp1 = np.zeros((n_instances_rwc*len(fv_exps_its[0][2]), 2))
+    data_array_rwc_exp1 = np.zeros((n_instances_rwc*(len(fv_exps_its[0][2])-2), 2))
     print("data_array shape [RWC]:"),
     print data_array_rwc_exp1.shape
-    data_array_rwc_exp2 = np.zeros((n_instances_rwc*len(fv_exps_its[0][2]), 2))
+    data_array_rwc_exp2 = np.zeros((n_instances_rwc*(len(fv_exps_its[0][2])-2), 2))
     
     # labels are same for both cases as the number of fvs are the same
-    comp_ids = np.arange(1, len(fv_exps_its[0][0])).tolist() # just 4 compid's we ignore min(data)
+    comp_ids = np.arange(2, len(fv_exps_its[0][0])).tolist() # we also ignore the zero by zero comparison # just 4 compid's we ignore min(data)
     print("Comparison ids:"),
     print comp_ids
 
@@ -253,7 +254,7 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     exps_its=[]
     exps_final = []
     for res_exp in fv_exps_its:
-        for x in [0, 2, 3, 4]: #range(len(res_exp[0])): # just for four cases, we ignore min(data)
+        for x in [2, 3, 4]: #we ignore the zero by zero comparison for better readibility #[0, 2, 3, 4]: #range(len(res_exp[0])): # just for four cases, we ignore min(data)
             exps_its.append([d[x] for d in res_exp])
         exps_final.append(exps_its)
         exps_its = []
@@ -297,61 +298,72 @@ def plot_fv_senstivity(fv_exps_its, res_dir):
     # create a pandas data frame as seaborn expects one
     # exp2_1 -> Jamendo temporal
     df_acts_exp1 = pd.DataFrame(data_array_jam_exp1, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    #df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4: r'$N^{norm}_g$'})
     df_acts_exp1.n_common_exps = df_acts_exp1['n_common_exps'].astype('int') # change the dtype
     df_acts_exp1.to_csv(res_dir + 'exp2_'+str(1) + '/' + 'exp2_'+ str(1) + '_fv_exps_its.csv', index=False)
 
 
     # exp2_2 -> Jamendo spectral
     df_acts_exp2 = pd.DataFrame(data_array_jam_exp2, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp2['fv_comp_ids'] = df_acts_exp2['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    #df_acts_exp2['fv_comp_ids'] = df_acts_exp2['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    df_acts_exp2['fv_comp_ids'] = df_acts_exp2['fv_comp_ids'].map({2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4: r'$N^{norm}_g$'})
     df_acts_exp2.n_common_exps = df_acts_exp2['n_common_exps'].astype('int') # change the dtype
     df_acts_exp2.to_csv(res_dir + 'exp2_'+str(2) + '/' + 'exp2_'+ str(2) + '_fv_exps_its.csv', index=False)
 
     # exp2_3 -> RWC temporal
     df_acts_exp3 = pd.DataFrame(data_array_rwc_exp1, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp3['fv_comp_ids'] = df_acts_exp3['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    #df_acts_exp3['fv_comp_ids'] = df_acts_exp3['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    df_acts_exp3['fv_comp_ids'] = df_acts_exp3['fv_comp_ids'].map({2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4: r'$N^{norm}_g$'})
     df_acts_exp3.n_common_exps = df_acts_exp3['n_common_exps'].astype('int') # change the dtype
     df_acts_exp3.to_csv(res_dir + 'exp2_'+str(3) + '/' + 'exp2_'+ str(3) + '_fv_exps_its.csv', index=False)
 
 
     # exp2_4 -> RWC spectral
     df_acts_exp4 = pd.DataFrame(data_array_rwc_exp2, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp4['fv_comp_ids'] = df_acts_exp4['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    #df_acts_exp4['fv_comp_ids'] = df_acts_exp4['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    df_acts_exp4['fv_comp_ids'] = df_acts_exp4['fv_comp_ids'].map({2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4: r'$N^{norm}_g$'})
     df_acts_exp4.n_common_exps = df_acts_exp4['n_common_exps'].astype('int') # change the dtype
     df_acts_exp4.to_csv(res_dir + 'exp2_'+str(4) + '/' + 'exp2_'+ str(4) + '_fv_exps_its.csv', index=False)
         
     # plotting the distribution of neurons
     sns.set(color_codes=True)
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(7, 6))
+    fs=12
     plt.subplot(2, 2, 1)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp1)    
-    plt.title('(a)')
+    plt.title('(a)', fontsize=fs)
     plt.xticks([]) # turns off x-axis ticks
+    plt.yticks(fontsize=fs)
     plt.xlabel('')
-    plt.ylabel(r'$N_{ce}$')
+    plt.ylabel(r'$N_{ce}$', fontsize=fs)
 
     plt.subplot(2, 2, 2)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp2)    
-    plt.title('(b)')
+    plt.title('(b)', fontsize=fs)
     plt.xticks([]) # turns off x-axis ticks
+    plt.yticks(fontsize=fs)
     plt.xlabel('')
-    plt.ylabel(r'$N_{ce}$')
+    plt.ylabel(r'$N_{ce}$', fontsize=fs)
     
     plt.subplot(2, 2, 3)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp3)    
-    plt.title('(c)')
-    plt.ylabel(r'$N_{ce}$')
-    plt.xlabel('Comparison labels')
+    plt.title('(c)', fontsize=fs)
+    plt.ylabel(r'$N_{ce}$', fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.xlabel('Content type', fontsize=fs)
+    plt.xticks(fontsize=fs)
     
     plt.subplot(2, 2, 4)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp4)    
-    plt.title('(d)')
-    plt.xlabel('Comparison labels')
-    plt.ylabel(r'$N_{ce}$')
+    plt.title('(d)', fontsize=fs)
+    plt.xlabel('Content type', fontsize=fs)
+    plt.ylabel(r'$N_{ce}$', fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.xticks(fontsize=fs)
 
     plt.tight_layout()
-    plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
+    plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox_inches = 'tight')
     
     
 def plot_fv_senstivity_exp4(fv_exps_its, res_dir):
@@ -389,6 +401,15 @@ def plot_fv_senstivity_exp4(fv_exps_its, res_dir):
     print("rearranged data:"),
     print(exps_final)
     
+    print("mean c1:%f" %(np.mean(exps_final[0])))
+    print("mean c2:%f" %(np.mean(exps_final[1])))
+    print("mean c3:%f" %(np.mean(exps_final[2])))
+    print("mean c4:%f" %(np.mean(exps_final[3])))
+    print(Counter(exps_final[0]))
+    print(Counter(exps_final[1]))
+    print(Counter(exps_final[2]))
+    print(Counter(exps_final[3]))
+    
     i = 0
     # fill exp 1 data
     for c_id, exps in zip(comp_ids, exps_final):
@@ -401,20 +422,51 @@ def plot_fv_senstivity_exp4(fv_exps_its, res_dir):
     # create a pandas data frame as seaborn expects one
     # exp2_1 -> Jamendo temporal
     df_acts_exp1 = pd.DataFrame(data_array_exp1, columns=['fv_comp_ids', 'n_common_exps'])
-    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_1$', 2:r'$C_2$', 3: r'$C_3$', 4:r'$C_4$'})#, 5:r'$C_5$'})
+    #df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$C_{G1}$', 2:r'$C_{G2}$', 3: r'$C_{G3}$', 4:r'$C_{G4}$'})#, 5:r'$C_5$'})
+    df_acts_exp1['fv_comp_ids'] = df_acts_exp1['fv_comp_ids'].map({1: r'$zero$', 2:r'$min_{inp}$', 3: r'$mean_{inp}$', 4:r'$N_g$'})#, 5:r'$C_5$'})
     df_acts_exp1.n_common_exps = df_acts_exp1['n_common_exps'].astype('int') # change the dtype
-    df_acts_exp1.to_csv(res_dir + 'exp2_'+str(1) + '/' + 'exp2_'+ str(1) + '_fv_exps_its.csv', index=False)
+    df_acts_exp1.to_csv(res_dir + 'exp4_'+str(1) + '/' + 'exp4_'+ str(1) + '_fv_exps_its.csv', index=False)
         
     # plotting the distribution of neurons
     sns.set(color_codes=True)
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(6, 5))
+    fs=11
+    plt.subplot(2, 1, 1)
     sns.violinplot(x='fv_comp_ids', y='n_common_exps', data=df_acts_exp1)    
-    plt.ylabel(r'$N_{ce}$')
-    plt.xlabel('Comparison labels')
+    plt.ylabel(r'$N_{ce}$', fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.xticks([]) # turns off x-axis ticks
+    plt.xlabel('')
 
+    #plt.tight_layout()
+    #plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
+    
+    # plotting the means
+    #plt.figure(figsize=(8,6))
+    plt.subplot(2, 1, 2)
+    #x = [r'$C_{G1}$', r'$C_{G2}$', r'$C_{G3}$', r'$C_{G4}$']
+    x = [r'$zero$', r'$min_{inp}$', r'$mean_{inp}$', r'$N^{norm}_g$']
+    #means = [2.04, 1.67, 2.16, 1.96]
+    top3 = [157/656.0, 47/656.0, 219/656.0, 121/656.0]
+    top2 = [373/656.0, 364/656.0, 330/656.0, 404/656.0]
+    top1 = [123/656.0, 233/656.0, 102/656.0, 121/656.0]
+    top0 = [3/656.0, 12/656.0, 5/656.0, 10/656.0]
+    
+    x_pos = [i for i, _ in enumerate(x)]
+
+    plt.bar(x_pos, top0, color='darkorchid', alpha = 1, label = r'$N_{ce}=0$', bottom = np.add(np.add(top2, top3), top1), width=0.6)
+    plt.bar(x_pos, top1, color='darkcyan', alpha = 0.75, label = r'$N_{ce}=1$', bottom = np.add(top2, top3), width=0.6)
+    plt.bar(x_pos, top2, color='darkkhaki', alpha = 0.75, label = r'$N_{ce}=2$', bottom = top3, width=0.6)
+    plt.bar(x_pos, top3, color='darksalmon', alpha = 0.75, label = r'$N_{ce}=3$', width=0.6)
+
+    plt.xticks(x_pos, x, fontsize=fs)
+    plt.ylabel(r'$N_{instances}$', fontsize=fs)
+    plt.xlabel("Content type", fontsize=fs)
+    #plt.xlabel("Comparison labels")
+    plt.legend(loc="best", fontsize=fs-2)
     plt.tight_layout()
-    plt.savefig(res_dir + 'slime_fv_exps_its.pdf', dpi=300, bbox = 'tight')
-
+    plt.savefig(res_dir + 'means.pdf', dpi=300, bbox='tight')
+    
 
 def process_exps(explanations, fvs, iterations):
     """
@@ -534,45 +586,52 @@ def plot_exp3(explanations, result_path):
     # for exp 3_3 - temporal rwc
     df_acts_rwc_exp1 = pd.DataFrame(data_array_rwc_exp1, columns=['fill_value', 'n_unique_comps'])
     df_acts_rwc_exp1.fill_value = df_acts_rwc_exp1['fill_value'].astype('int') # change the dtype
-    df_acts_rwc_exp1['fill_value'] = df_acts_rwc_exp1['fill_value'].map({0: r'$zero$', 1:r'$min_{data}$', 2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4:r'$N_g$'})
+    df_acts_rwc_exp1['fill_value'] = df_acts_rwc_exp1['fill_value'].map({0: r'$zero$', 1:r'$min_{data}$', 2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4:r'$N^{norm}_g$'})
     df_acts_rwc_exp1.n_unique_comps = df_acts_rwc_exp1['n_unique_comps'].astype('int') # change the dtype
     df_acts_rwc_exp1.to_csv(result_path + 'exp3_'+str(3) + '/' + 'exp3_'+ str(3) + '_fv_analysis.csv', index=False)
 
     # for exp 3_4 - spectral rwc
     df_acts_rwc_exp2 = pd.DataFrame(data_array_rwc_exp2, columns=['fill_value', 'n_unique_comps'])
     df_acts_rwc_exp2.fill_value = df_acts_rwc_exp2['fill_value'].astype('int') # change the dtype
-    df_acts_rwc_exp2['fill_value'] = df_acts_rwc_exp2['fill_value'].map({0: r'$zero$', 1:r'$min_{data}$', 2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4:r'$N_g$'})
+    df_acts_rwc_exp2['fill_value'] = df_acts_rwc_exp2['fill_value'].map({0: r'$zero$', 1:r'$min_{data}$', 2: r'$min_{inp}$', 3:r'$mean_{inp}$', 4:r'$N^{norm}_g$'})
     df_acts_rwc_exp2.n_unique_comps = df_acts_rwc_exp2['n_unique_comps'].astype('int') # change the dtype
     df_acts_rwc_exp2.to_csv(result_path + 'exp3_'+str(4) + '/' + 'exp3_'+ str(4) + '_fv_analysis.csv', index=False)
     
     sns.set(color_codes=True)
     plt.figure(figsize=(8, 6))
+    fs = 12
     
     plt.subplot(2, 2, 1)    
     sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_jam_exp1)
-    plt.title('(a)')
-    plt.ylabel(r'$U_n$')
+    plt.title('(a)', fontsize=fs)
+    plt.ylabel(r'$U_n$', fontsize=fs)
     plt.xticks([]) # turns off x-axis ticks
     plt.xlabel('')
+    plt.yticks(fontsize=fs)
 
     plt.subplot(2, 2, 2)
     sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_jam_exp2)    
-    plt.title('(b)')
+    plt.title('(b)', fontsize=fs)
     plt.xticks([]) # turns off x-axis ticks
     plt.xlabel('')
-    plt.ylabel(r'$U_n$')
+    plt.ylabel(r'$U_n$', fontsize=fs)
+    plt.yticks(fontsize=fs)
     
     plt.subplot(2, 2, 3)
     sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_rwc_exp1)     
-    plt.title('(c)')
-    plt.ylabel(r'$U_n$')
-    plt.xlabel('Content type')
+    plt.title('(c)', fontsize=fs)
+    plt.ylabel(r'$U_n$', fontsize=fs)
+    plt.xlabel('Content type', fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.xticks(fontsize=fs)
     
     plt.subplot(2, 2, 4)
     sns.violinplot(x='fill_value', y='n_unique_comps', data=df_acts_rwc_exp2)
-    plt.title('(d)')
-    plt.xlabel('Content type')
-    plt.ylabel(r'$U_n$')
+    plt.title('(d)', fontsize=fs)
+    plt.xlabel('Content type', fontsize=fs)
+    plt.ylabel(r'$U_n$', fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.xticks(fontsize=fs)
 
     plt.tight_layout()    
     plt.savefig(result_path + 'slime_fv_analysis.pdf', dpi=300, bbox = 'tight')
@@ -581,7 +640,7 @@ def plot_segments(seg_list, res_dir, cm = 'coolwarm'):
     """
     plots the segment figure in the paper Fig. 4.9
     """
-    fs = 9
+    fs = 13
     plt.figure(figsize=(8, 3))
 
     plt.subplot(1, 2, 1)
@@ -604,6 +663,81 @@ def plot_segments(seg_list, res_dir, cm = 'coolwarm'):
     cax = plt.axes([0.93, 0.11, 0.0150, 0.77])
     cbar = plt.colorbar(cax=cax, ticks=[0, 2, 4, 6, 8])
     cbar.ax.tick_params(labelsize=fs)
-    plt.savefig(res_dir, dpi=300, bbox = 'tight')
+    plt.savefig(res_dir, dpi=300, bbox_inches = 'tight')
     
+def plot_ijcnn_fig3(data_list, res_path):
+    """
+    Plots fig3 in the ijcnn 2020 paper
+    """
+    
+    fs=8
+    plt.figure(figsize=(10, 2))
+    
+    plt.subplot(1, 6, 1)
+    disp.specshow(data_list[0][0].T, x_axis='time', hop_length= 315, y_axis='mel', fmin=27.5, fmax=8000, sr=22050,cmap='coolwarm')
+    plt.ylabel('Freq(Hz)', labelpad=0.5, fontsize=fs)
+    plt.xlabel('Time(sec)', labelpad=0.5, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    cbar = plt.colorbar(orientation="horizontal", pad=0.22)
+    cbar.ax.tick_params(labelsize=fs)
+    cbar.ax.locator_params(nbins=4)
+    plt.title(r'$input$', fontsize=fs)
+
+    plt.subplot(1, 6, 2)
+    disp.specshow(data_list[0][1].T, x_axis='time', hop_length= 315, y_axis= 'off', fmin=27.5, fmax=8000, sr=22050,cmap='coolwarm')
+    plt.xlabel('Time(sec)', labelpad=1, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    cbar = plt.colorbar(orientation="horizontal", pad=0.22)
+    cbar.ax.tick_params(labelsize=fs)
+    cbar.ax.locator_params(nbins=4)
+    plt.title(r'$zero$', fontsize=fs)
+    
+    plt.subplot(1, 6, 3)
+    disp.specshow(data_list[1][1].T, x_axis='time', hop_length= 315, y_axis= 'off', fmin=27.5, fmax=8000, sr=22050,cmap='coolwarm')
+    plt.xlabel('Time(sec)', labelpad=1, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    cbar = plt.colorbar(orientation="horizontal", pad=0.22)
+    cbar.ax.tick_params(labelsize=fs)
+    cbar.ax.locator_params(nbins=4)
+    plt.title(r'$min_{data}$', fontsize=fs)
+
+    plt.subplot(1, 6, 4)
+    disp.specshow(data_list[2][1].T, x_axis='time', hop_length= 315, y_axis= 'off', fmin=27.5, fmax=8000, sr=22050,cmap='coolwarm')
+    plt.xlabel('Time(sec)', labelpad=1, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    cbar = plt.colorbar(orientation="horizontal", pad=0.22)
+    cbar.ax.tick_params(labelsize=fs)
+    cbar.ax.locator_params(nbins=4)
+    plt.title(r'$min_{inp}$', fontsize=fs)
+
+    plt.subplot(1, 6, 5)
+    disp.specshow(data_list[3][1].T, x_axis='time', hop_length= 315, y_axis= 'off', fmin=27.5, fmax=8000, sr=22050,cmap='coolwarm')
+    plt.xlabel('Time(sec)', labelpad=1, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    cbar = plt.colorbar(orientation="horizontal", pad=0.22)
+    cbar.ax.tick_params(labelsize=fs)
+    cbar.ax.locator_params(nbins=4)
+    plt.title(r'$mean_{inp}$', fontsize=fs)
+    
+    plt.subplot(1, 6, 6)
+    disp.specshow(data_list[4][1].T, x_axis='time', hop_length= 315, y_axis= 'off', fmin=27.5, fmax=8000, sr=22050,cmap='coolwarm')
+    plt.xlabel('Time(sec)', labelpad=1, fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    cbar = plt.colorbar(orientation="horizontal", pad=0.22)
+    cbar.ax.tick_params(labelsize=fs)
+    cbar.ax.locator_params(nbins=4)
+    plt.title(r'$N^{norm}_g$', fontsize=fs)
+
+    plt.tight_layout()
+    plt.savefig(res_path, dpi=300)   
+
+
+
+
     
