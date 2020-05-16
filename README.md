@@ -4,7 +4,7 @@
 
 2. The details of the directories and the python files are mentioned below.
    - Directories
-     - lime
+     - lime: code of the LIME algorithm. At some places the original code has been modified to extend it for the experiments                in the paper.
      - models
      - synth_data
    - Python files
