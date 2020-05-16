@@ -6,7 +6,7 @@
    - Directories
      - **lime**: contains the code of the LIME algorithm. At some places the original code has been modified for using it in the    experiments in this paper. 
      - **models**: contains the pre-trained Tensorflow model called as "SVDNet-R1" in the paper and the mean and standard deviation of input data for each dataset.
-     - **synth_data**: contains the synthetic dataset used in Section 5 of the paper. 
+     - **synth_data**: contains the synthetic dataset and ground-truth information used in Section 5 of the paper. 
    - Python files
      - audio.py
      - augment.py
