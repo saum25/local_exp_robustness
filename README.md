@@ -12,3 +12,10 @@
      - **pp_audio.py**, **audio.py**, **augment.py**, **simplecache.py**, and **progress.py**: files related to transforming musical audio data into mel-spectrograms inputs for generating predictions from the SVDNet-R1 model.
      - **create_test_script.py**, **datasetgen.py**: files related to the generation of synthetic dataset using the vocal and non-vocal stems from the CCMixter dataset.
      - **plot_results.py**, **utils.py**: files that contain code of some helper functions and the code to plot results of all the experiments.
+
+3. To execute the code use the script below.
+
+   - python wrapper.py --dataset_path "path_to_the_dataset"
+  
+   - The results are by default saved as a pickle file at the path "results/". Thus, before executing the code, one needs to create this directory.
+   
