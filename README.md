@@ -8,8 +8,7 @@
      - **models**: contains the pre-trained Tensorflow model called as "SVDNet-R1" in the paper and the mean and standard deviation of input data for each dataset.
      - **synth_data**: contains the synthetic dataset and ground-truth information used in Section 5 of the paper. 
    - Python files
-     - audio.py
-     - augment.py
+     - **pp_audio.py**, **audio.py**, **augment.py**, and **simplecache.py**: files related to transforming musical audio files into inputs for generating predictions from the SVDNet-R1 model.
      - create_test_script.py
      - datasetgen.py
      - plot_results.py
