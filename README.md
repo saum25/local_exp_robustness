@@ -11,5 +11,4 @@
      - **pp_audio.py**, **audio.py**, **augment.py**, **simplecache.py**, and **progress.py**: files related to transforming musical audio data into mel-spectrograms inputs for generating predictions from the SVDNet-R1 model.
      - **create_test_script.py**, **datasetgen.py**: files related to the generation of synthetic dataset using the vocal and non-vocal stems from the CCMixter dataset.
      - **wrapper.py**: main file that contains code to read input audio, generate its SVDNet-R1 prediction, and finally explain the prediction using SLIME.
-     - plot_results.py
-     - utils.py
+     - **plot_results.py**, **utils.py**: files that contain code of some helper functions and the code to plot results of all the experiments.
