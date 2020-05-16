@@ -5,6 +5,7 @@ import copy
 import numpy as np
 from sklearn.metrics import pairwise_distances
 import sys
+import pickle
 
 from . import lime_base
 
@@ -244,6 +245,9 @@ class LimeImageExplainer(object):
                 (num_samples, n_features))
         labels = []
         data[0, :] = 1
+        # enable for for collecting data for the IJCNN Fig.4 where we turn-off ICs with indices 2 and 7
+        '''data[1] = [1, 1, 0, 1, 1, 1, 1, 0, 1, 1]
+        data_to_save = []'''
         imgs = []
         for row in data:
             temp = copy.deepcopy(image)
@@ -254,6 +258,11 @@ class LimeImageExplainer(object):
             temp[mask] = fudged_image[mask]
             imgs.append(temp)
             if len(imgs) == batch_size:
+                # saves the input and its pre-defined perturbed version for plotting IJCNN Fig.4
+                '''data_to_save.append(imgs[0]) # input
+                data_to_save.append(imgs[1]) # pre-defined perturbed version - ICs 2 and 7 are turned-off
+                with open("results/ijcnn_fig4/data_5_noise_normalised", "wb") as fp:
+                    pickle.dump(data_to_save, fp)'''
                 #preds = classifier_fn(np.array(imgs)) # LIME CODE
                 imgs_arr = np.array(imgs)
                 imgs_arr = imgs_arr[:, :, :, np.newaxis]
