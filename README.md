@@ -7,4 +7,14 @@
      - lime
      - models
      - synth_data
-   - Files
+   - Python files
+     - audio.py
+     - augment.py
+     - create_test_script.py
+     - datasetgen.py
+     - plot_results.py
+     - pp_audio.py
+     - progress.py
+     - simplecache.py
+     - utils.py
+     - wrapper.py
