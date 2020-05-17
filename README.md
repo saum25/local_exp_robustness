@@ -20,4 +20,7 @@
    - The results are by default saved as a pickle file at the path "results/". Thus, before executing the code, one needs to create this directory.
    - The code has several input arguments that can be configured depending on the experiment one needs to execute. For example, to generate the Jamendo dataset results for the experiment in Section 4 (a), we need to use the script below
      - python wrapper.py --dataset_path "path_to_the_Jamendo_dataset" --n_inst_pf 25 --n_samp_exp
-   
+
+4. The code has been developed using frameworks mentioned in the packages.txt file.
+
+In case of any issue in using the code, please contact smishra@turing.ac.uk
